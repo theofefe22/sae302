@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?><project name="RotatoR v1" company="ALTECH INDUSTRIES" webLink="http://" view-date="2025-11-17" view-index="0" gantt-divider-location="509" resource-divider-location="300" version="3.3.3316" locale="fr_FR">
+    <description/>
+    <view zooming-state="default:5" id="gantt-chart">
+        <field id="tpd3" name="Nom" width="282" order="0"/>
+        <field id="tpd4" name="Date de début" width="105" order="1"/>
+        <field id="tpd5" name="Date de fin" width="106" order="2"/>
+        <field id="tpd15" name="Notes" width="20" order="3"/>
+        <option id="filter.completedTasks" value="false"/>
+        <option id="filter.dueTodayTasks" value="false"/>
+        <option id="filter.overdueTasks" value="false"/>
+        <option id="filter.inProgressTodayTasks" value="false"/>
+        <timeline><![CDATA[5]]></timeline>
+        <option id="color.recent"><![CDATA[#0066ff #00ccff #ff6600 #990099 #ff0000 #ff9999 #009900 #3300cc]]></option>
+    </view>
+    <view id="resource-table">
+        <field id="0" name="Nom" width="210" order="0"/>
+        <field id="1" name="Rôle par défaut" width="86" order="1"/>
+    </view>
+    <!-- -->
+    <calendars>
+        <day-types>
+            <day-type id="0"/>
+            <day-type id="1"/>
+            <default-week id="1" name="default" sun="1" mon="0" tue="0" wed="0" thu="0" fri="0" sat="1"/>
+            <only-show-weekends value="true"/>
+            <overriden-day-types/>
+            <days/>
+        </day-types>
+    </calendars>
+    <tasks empty-milestones="true">
+        <taskproperties>
+            <taskproperty id="tpd0" name="type" type="default" valuetype="icon"/>
+            <taskproperty id="tpd1" name="priority" type="default" valuetype="icon"/>
+            <taskproperty id="tpd2" name="info" type="default" valuetype="icon"/>
+            <taskproperty id="tpd3" name="name" type="default" valuetype="text"/>
+            <taskproperty id="tpd4" name="begindate" type="default" valuetype="date"/>
+            <taskproperty id="tpd5" name="enddate" type="default" valuetype="date"/>
+            <taskproperty id="tpd6" name="duration" type="default" valuetype="int"/>
+            <taskproperty id="tpd7" name="completion" type="default" valuetype="int"/>
+            <taskproperty id="tpd8" name="coordinator" type="default" valuetype="text"/>
+            <taskproperty id="tpd9" name="predecessorsr" type="default" valuetype="text"/>
+        </taskproperties>
+        <task id="5" uid="22f23a2f85944cf1bd0b50aa8811a075" name="SAE302" color="#3300cc" meeting="false" project="true" start="2025-11-10" duration="52" complete="0" expand="true">
+            <task id="6" uid="196c122bf20e40e5a8de2e2e6c8698ac" name="Début du projet" meeting="false" start="2025-11-10" duration="1" complete="0" expand="true"/>
+            <task id="13" uid="8e03c1af17854e328db9b3a7b097c32e" name="Temps alloué" color="#ff9999" meeting="false" start="2025-11-10" duration="52" complete="0" expand="true">
+                <task id="14" uid="7b297eeb32da4efba491b63eeaf6b1ae" name="Saé1" meeting="false" start="2025-11-10" duration="1" complete="0" expand="true"/>
+                <task id="16" uid="cc3bb0cc6eef471db8119ff8109e10eb" name="Saé2" meeting="false" start="2025-11-17" duration="1" complete="0" expand="true"/>
+                <task id="17" uid="e9853051681a493fa29c0ac7c199db62" name="Saé3" meeting="false" start="2025-11-22" duration="1" complete="0" expand="true"/>
+                <task id="18" uid="c4f5cc479f834dbcb6ce38f9a972dd98" name="Saé4" meeting="false" start="2025-11-24" duration="3" complete="0" expand="true"/>
+                <task id="19" uid="855af657292d41a8a81646558aa94ff8" name="Saé5" meeting="false" start="2025-12-02" duration="1" complete="0" expand="true"/>
+                <task id="20" uid="3d9a8f5bca4a40878dc68ea0f80d86cf" name="Saé6" meeting="false" start="2025-12-04" duration="1" complete="0" expand="true"/>
+                <task id="21" uid="470a33b43b914996a391824bbf66e502" name="HT1" meeting="false" start="2025-12-09" duration="4" complete="0" expand="true"/>
+                <task id="22" uid="9a6323be2c244ad4ae818d3c24aa5d27" name="HT2" meeting="false" start="2025-12-15" duration="5" complete="0" expand="true"/>
+                <task id="34" uid="c47d63f954af40378b83ada03e38ed5c" name="Date de rendu final" color="#ff0000" meeting="false" start="2025-12-31" duration="1" complete="0" priority="2" expand="true"/>
+            </task>
+            <task id="0" uid="4509922213514dc4b578f830c75e8123" name="Rédiger les livrables" color="#009900" meeting="false" start="2025-11-15" duration="41" complete="0" expand="true">
+                <task id="15" uid="9b36aa8376c3463a963d2d3fb5050895" name="Ecriture du fichier de préparation" meeting="false" start="2025-11-15" duration="5" complete="0" expand="true">
+                    <depend id="3" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="3" uid="f4caff58977f440ba77d13671856f6d9" name="Rendre le fichier de préparation" color="#ff0000" meeting="false" start="2025-11-20" duration="1" complete="0" priority="2" expand="true">
+                    <depend id="4" type="2" difference="18" hardness="Strong"/>
+                    <depend id="7" type="2" difference="3" hardness="Strong"/>
+                    <depend id="8" type="2" difference="0" hardness="Strong"/>
+                    <depend id="9" type="2" difference="11" hardness="Strong"/>
+                    <depend id="10" type="2" difference="0" hardness="Strong"/>
+                    <depend id="11" type="2" difference="0" hardness="Strong"/>
+                    <depend id="12" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="11" uid="eff208d3d55b49cda4283bf36f5d7041" name="Publier le code source sur GitHub" color="#ff0000" meeting="false" start="2025-12-23" duration="1" complete="0" expand="true">
+                    <depend id="12" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="12" uid="cd3ede33faa748d49eff6d08d3820d29" name="Produire une documentation" color="#ff0000" meeting="false" start="2025-12-24" duration="1" complete="0" expand="true">
+                    <depend id="10" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="10" uid="9b8f08b2527e40db9d61698ea23308ff" name="Faire une vidéo de présentation" color="#ff0000" meeting="false" start="2025-12-25" duration="1" complete="0" expand="true"/>
+            </task>
+            <task id="7" uid="f4ca27ab86ee48cab6d725760036c3b6" name="Concevoir une GUI avec PyQt6" color="#990099" meeting="false" start="2025-11-24" duration="7" complete="0" expand="true">
+                <depend id="10" type="2" difference="0" hardness="Strong"/>
+                <depend id="11" type="2" difference="0" hardness="Strong"/>
+                <depend id="12" type="2" difference="0" hardness="Strong"/>
+                <task id="23" uid="e2057455196b453ab2877c1aaf56c12f" name="Apprendre à utiliser Qt6" meeting="false" start="2025-11-24" duration="1" complete="0" expand="true">
+                    <depend id="30" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="30" uid="0ec9fa2e8c2744feb863c8c9b72b14db" name="Concevoir le schéma des GUI" meeting="false" start="2025-11-25" duration="2" complete="0" expand="true">
+                    <depend id="29" type="2" difference="2" hardness="Strong"/>
+                </task>
+                <task id="29" uid="9fe6e81f409840bfa45d8b035e3c554b" name="Programmer sous Python" meeting="false" start="2025-11-29" duration="2" complete="0" expand="true"/>
+            </task>
+            <task id="9" uid="738bdcd9ef954f919ec933fe04614e9b" name="Traiter les informations" meeting="false" start="2025-12-02" duration="3" complete="0" expand="true">
+                <depend id="10" type="2" difference="0" hardness="Strong"/>
+                <depend id="11" type="2" difference="0" hardness="Strong"/>
+                <depend id="12" type="2" difference="0" hardness="Strong"/>
+            </task>
+            <task id="4" uid="37faf4e80fa244bcabdf20f951b90ca9" name="Implémenter une base de données avec MariaDB" color="#ff6600" meeting="false" start="2025-12-09" duration="4" complete="0" expand="true">
+                <depend id="10" type="2" difference="0" hardness="Strong"/>
+                <depend id="11" type="2" difference="0" hardness="Strong"/>
+                <depend id="12" type="2" difference="0" hardness="Strong"/>
+                <task id="31" uid="75614e4ac22441b8b2612575c52ae5e4" name="Apprendre à utiliser MariaDB" meeting="false" start="2025-12-09" duration="1" complete="0" expand="true"/>
+                <task id="32" uid="5e1108b7725d4335962c357a21133018" name="Créer une BDD" meeting="false" start="2025-12-09" duration="1" complete="0" expand="true">
+                    <depend id="33" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="33" uid="0b1fa7f249f249f085f7b78229a48d85" name="Lier la BDD avec Python" meeting="false" start="2025-12-10" duration="3" complete="0" expand="true"/>
+            </task>
+            <task id="8" uid="d4f7384c45ca4c71a724b64dc4cc667b" name="Chiffrer les données" color="#0066ff" meeting="false" start="2025-12-15" duration="5" complete="0" expand="true">
+                <depend id="10" type="2" difference="2" hardness="Strong"/>
+                <depend id="11" type="2" difference="3" hardness="Strong"/>
+                <depend id="12" type="2" difference="0" hardness="Strong"/>
+                <task id="24" uid="312083522ecf4973a47fecc538f5669f" name="Comprendre le fonctionnement du chiffrage" meeting="false" start="2025-12-15" duration="1" complete="0" expand="true">
+                    <depend id="28" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="28" uid="04bc917327144e558bf0bb95d9aae1bc" name="Concevoir un algorithme" meeting="false" start="2025-12-16" duration="2" complete="0" expand="true">
+                    <depend id="25" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="25" uid="e19bf25bb8ce4249a4c112145438bd99" name="Concevoir un chiffrement asynchrone" meeting="false" start="2025-12-18" duration="1" complete="0" expand="true">
+                    <depend id="26" type="2" difference="0" hardness="Strong"/>
+                </task>
+                <task id="26" uid="7cb02b3b5f774ecc9216ddc93bf8d4a9" name="Mettre en place le chiffrement asynchrone" meeting="false" start="2025-12-19" duration="1" complete="0" expand="true"/>
+            </task>
+        </task>
+    </tasks>
+    <resources>
+        <resource id="0" name="Théo-Félix ADAM" function="Default:1" contacts="theo-felix.adam@uha.fr" phone="0776814495">
+            <rate name="standard" value="10"/>
+        </resource>
+        <resource id="1" name="Frédéric DROUHIN" function="1" contacts="" phone=""/>
+    </resources>
+    <allocations>
+        <allocation task-id="0" resource-id="0" function="Default:1" responsible="true" load="100.0"/>
+        <allocation task-id="20" resource-id="1" function="Default:0" responsible="true" load="1.0"/>
+        <allocation task-id="19" resource-id="1" function="Default:0" responsible="true" load="1.0"/>
+        <allocation task-id="18" resource-id="1" function="Default:0" responsible="true" load="1.0"/>
+        <allocation task-id="17" resource-id="1" function="Default:0" responsible="true" load="1.0"/>
+        <allocation task-id="16" resource-id="1" function="Default:0" responsible="true" load="1.0"/>
+        <allocation task-id="14" resource-id="1" function="Default:0" responsible="true" load="1.0"/>
+    </allocations>
+    <vacations>
+        <vacation start="2025-12-29" end="2026-01-05" resourceid="0"/>
+    </vacations>
+    <previous/>
+    <roles roleset-name="Default"/>
+    <roles>
+        <role id="1" name="Consultant"/>
+    </roles>
+</project>
