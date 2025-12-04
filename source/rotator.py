@@ -3,16 +3,26 @@ ROTATOR v1
 
 Plus d'informations sur https://github.com/theofefe22/sae302
 
+2025 - Altech Industries - Tous droits réservés
+
 """
 # BIBLIOTHEQUES
 import socket
 import random as rd
 from sympy import isprime as isp
+import __logo
+import __gui as gui
+import __secp256r1 as secp
+import mysql.connector
 
 
 # VARIABLES LOCALES
 x25519 = ((2**255)-19)
 fi = (1+(5**.5))/2
+pi = rd._pi
+e = rd._e
+rds = rd.SystemRandom()
+os = rd._os
 
 
 # FONCTIONS COMMUNES
@@ -77,7 +87,21 @@ class A64:
         elif x == 2:
             alfa = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcd efghijk!lmnopqrstuvwxyz1234567890"
         elif x == 3:
-            alfa = "1234567890 ABCDEFGH!IJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+            alfa = "ae7RdcPnrk2gWQDOUuFhM4KLptvz9XEG5ob1ICZNYi0A6x 8JlHTfsyjVmqwBS3!"
+        elif x == 4:
+            alfa = "dRuAWDrQJiHhL1FSg5a7ps0OfG36Eot8bBCk9PUcT4 qZj!NnYXzwMVmK2lIvexy"
+        elif x == 5:
+            alfa = "EACzHvjsSY0f5PMIJNGq246WtDao bdhrFgulZxcVKw39Q1LBT8O7UXRmi!ykpen"
+        elif x == 6:
+            alfa = "hSz2 cEaojei3ldqD0Oy67JH4Q8CYKBIfpRT!wbnmkvtL9NMVAsrg5ZFxuGPUWX1"
+        elif x == 7:
+            alfa = "t5BQyO098rb!PAEWdlpN6YXMks3quJ HoGURw1DxghfFcV2avmInTZK7zLSjCe4i"
+        elif x == 8:
+            alfa = "wcQIB7r281tDJXqOkLjbFug3GdHUy0KRS5oElVxPMTW!vmZNpn CfA96esYa4zih"
+        elif x == 9:
+            alfa = "xB5 mcEHquKJoLyOtTrRM8XQnli!kZFgf9Nh4a62pwGU70esVSC3DdWAPYIvj1bz"
+        elif x == 10:
+            alfa = "KkGYiq gTBVtXxJwCfZ7mQphb39Ooen!c1RNuUSjE2arlDPL08zI6yF4H5MWAsvd"
         else:
             raise ValueError("L'alphabet n'existe pas.")
         return alfa
@@ -94,7 +118,7 @@ class A64:
     def z64(self, nombre: int = None, alfabet: int = None):
         # Caractéristiques du nombre
         if nombre == None:
-            nombre = rd.randint(123,8973218)
+            nombre = rds.randint(123,8973218)
         elif not isinstance(nombre, int):
             raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'int'.")
         # Caractéristiques de l'alfabet à utiliser
@@ -111,6 +135,41 @@ class A64:
             nombre, reste = divmod(nombre, 64)
             symbol.append(self.alfa(2)[reste])
         return "0z" + "".join(reversed(symbol))
+
+
+class BDD:
+    """
+    Classe de la base de données (BDD)
+    
+    Attributs:
+        adresse (str) : Adresse IP du serveur
+        port (int) : Port de connexion au serveur
+        
+    Méthodes:
+        connexion() : Connexion au serveur
+        enoie(message) : Envoie d'un message au serveur
+        recption() : Message reçu du serveur
+        fin() : Fermeture de la connexion au serveur
+    """
+    def __init__(self, hote, utilisateur, mdp, bdd):
+        self.__bdd = mysql.connector.connect(host=hote, user=utilisateur, password=mdp, database=bdd)
+        self.cursor = self.__bdd.cursor()
+    
+    def commit(self):
+        self.__bdd.commit()
+        
+    def insert(self, nom, ip, port, kp):
+        n = kp[0]
+        e = kp[1]
+        sql = "INSERT INTO Routeurs2 (nom, ip, port, n, e) VALUES (%s, %s, %s, %s, %s)"
+        valeurs = [(nom, ip, port, n, e)]
+        self.cursor.executemany(sql, valeurs)
+        self.commit()
+        print(self.cursor.rowcount, "lignes insérées.")
+        self.cursor.close()
+    
+    def fermer(self):
+        self.__bdd.close()
 
 
 class Client:
@@ -304,10 +363,9 @@ class Maths:
     @staticmethod
     def gp(nombre_bits):
         """Génère un nombre premier ayant n (nombre_bits) bits"""
-        rds = rd.SystemRandom()
         nombre = 0
         while not isp(nombre): # Tant que le nombre n'est pas premier
-            nombre = rd.getrandbits(nombre_bits) # Génère un nombre aléatoire de n bits
+            nombre = rds.getrandbits(nombre_bits) # Génère un nombre aléatoire de n bits
             nombre |= (1 << nombre_bits - 1) | 1  # S'assure que c'est bien un nombre de n bits et impair et ou logique avec nombre
         return nombre
     
@@ -398,7 +456,7 @@ class DH:
         # Si p = x25519 alors la longueur est de 77 caractères
         g = self.__g
         # Détermine la clé privée, de taille inférieur ou égale à p
-        Km = rd.randint(0, p-1)
+        Km = rds.randint(0, p-1)
         self.__Km = Km
         # Calcul la clé publique, de taille inférieur ou égale à p
         Kp0 = pow(g, Km, p)
@@ -438,6 +496,7 @@ class RSA:
         self.__m0 = message_a_chiffrer
         self.__c1 = message_a_dechiffrer
         self.__Kp1 = Kp1
+        self.__fichier_km = ""
         
     @property
     def c0(self) -> int:
@@ -481,9 +540,19 @@ class RSA:
         return self.__delta
     
     @property
+    def fichier_km(self):
+        """Renvoie l'emplacement du fichier de la clé privée"""
+        return self.__fichier_km
+    
+    @property
     def Km(self) -> int:
         """Renvoie la clé privée"""
         return self.__Km
+    
+    @property
+    def fichier_kp(self):
+        """Renvoie l'emplacement du fichier de la clé privée"""
+        return self.__fichier_kp
     
     @property
     def Kp(self) -> int:
@@ -526,19 +595,17 @@ class RSA:
                 e = Maths.gp(int(1.8*nb))
             else:
                 break
-        self.__e = e
-        # Calcul des coefficients tels que e*u + phi_n*v = pgcd(e,phi_n) = g
+        # Calcul des coefficients tels que e*u + phi_n*v = pgcd(e,phi_n) = g = 1
         g, u, v = Maths.euclide_etendu(e, phi_n)
         # Calcul du coefficient d
         d = u%phi_n
-        self.__d = d
         # Clé privée
         Km = [hex(p), hex(q), hex(d)]
-        self.__n = n
         self.__Km = Km
         # Clé publique
         Kp = [hex(n), hex(e)]
         self.__Kp = Kp
+        print(f"Des clés RSA de taille {3*nombre_bits} bits ont été générées")
         return [Kp, Km]
     
     def chiff(self, message: str = None, Kp1: list = None):
@@ -594,7 +661,7 @@ class RSA:
         m1 = m1.to_bytes((m1.bit_length() + 7)//8, 'big').decode()
         return m1
     
-    def hacher(self, message: str) -> hex:
+    def hacher1(self, message: str) -> hex:
         """
         Hache un message
         
@@ -607,30 +674,56 @@ class RSA:
             valeur_hachage &= 0xFFFFFFFFFFFFFFFF
         return hex(valeur_hachage)
     
-    def signer(self, message_a_signer: str, Km: list = None) -> list:
+    def hacher2(self, message: str = None, sel: bytes = None):
+        """
+        Hache un message en utilisant SHA512
+        
+        Argument:
+            message (str) : Message à hacher
+            sel (bytes) : Sel du haché
+        """
+        msgb = bytes(message, "utf-8")
+        # Caractéristiques du sel
+        if sel == None:
+            sel = rds.randbytes(16)
+        elif len(sel) < 16:
+            raise ValueError("Le sel n'est pas assez salé, veuilez renseigner un sel d'au moins 16 octects.")
+        # Fonction principale
+        sha512 = rd._sha512
+        hachis = sha512(msgb + sel)
+        digere = hachis.digest()
+        return [digere,sel]
+    
+    def signer(self, message_a_signer: str = None) -> list:
         """
         Signe un message
         
         Arguments:
             message_a_signer (str) : Message à signer
-            Km (list) : Ma clé privée
         """
         # Caractéristiques du message à signer
         if isinstance(message_a_signer, list):
             message_a_signer = str(message_a_signer)
         # Caractéristiques de ma clé privée
-        if Km == None:
-            Km = self.__Km
+        Km = self.__Km
         # Paramètres
         d0 = int(Km[2],16)
         n0 = int(Km[0],16)*int(Km[1],16)
         # Calcul du haché
-        hache = int(self.hacher(message_a_signer),16)
+        try:
+            hache = self.hacher2(message_a_signer)
+            sel = hache[1]
+            hache = int.from_bytes(hache[0],"big")
+        except:
+            hache = self.hacher1(message_a_signer)
+            print("La haché a été obtenu à partir d'une fonction de hachage secondaire.")
+            hache = int(hache,16)
+            sel = 0
         # Cryptage du haché
         signe = pow(hache, d0, n0)
-        return [message_a_signer, hex(signe)]
+        return [message_a_signer, hex(signe), sel]
     
-    def verifier(self, message_signe: str, Kp1: list = None):
+    def verifier(self, message_signe: str, methode_hache: int = 2, Kp1: list = None):
         """
         Vérifie la signature d'un message
         
@@ -638,16 +731,25 @@ class RSA:
             message_signe (str) : Message à signer
             Kp1 (list) : La clé publique de l'autre
         """
+        # Caractéristiques clé publique de l'autre
         if Kp1 == None:
             Kp1 = self.__Kp1
+        elif Kp1 == self.__Kp:
+            raise ValueError("Veuillez renseigner la clé publique de votre correspondant.")
+        # Variables
         message = message_signe[0]
-        signe = message_signe[1]
+        signe = int(message_signe[1],16)
         # Hacher le message reçu
-        dessigne_prime = int(self.hacher(message),16)
+        if methode_hache == 1:
+            dessigne_prime = int(self.hacher1(message),16)
+        elif methode_hache == 2:
+            sel = message_signe[2]
+            dessigne_prime = int.from_bytes(self.hacher2(message,sel)[0],"big")     
         print(dessigne_prime)
         # Décripter la signature
         n1 = int(Kp1[0],16)
         e1 = int(Kp1[1],16)
+        print(signe)
         dessigne = pow(signe, e1, n1)
         print(dessigne)
         # Comparaison
@@ -659,6 +761,182 @@ class RSA:
             return False
 
 
+    def sauvegarde_cles(self):
+        # Création des fichiers
+        nom_fichier = os.path.splitext(os.path.basename(__file__))[0]
+        self.__fichier_kp = f"{nom_fichier}_cle_publique.pem"
+        print(f"Le fichier {self.__fichier_kp} a été crée.")
+        self.__fichier_km = f"{nom_fichier}_cle_privee.pem"
+        print(f"Le fichier {self.__fichier_km} a été crée.")
+        # Enregistrement de la clé publique
+        with open(self.__fichier_kp, "w") as f:
+            for item in self.__Kp:
+                f.write(f"{item}\n")
+        # Enregistrement de la clé privée
+        with open(self.__fichier_km, "w") as g:
+            for item in self.__Km:
+                g.write(f"{item}\n")
+        print("Enregistrement des clés effectué avec succès.")
+            
+    def chargement_cles(self):
+        """
+        Chargement des clés
+        
+        Renvoie:
+            Kp (tuple) : Clé publique
+        """
+        nom_fichier = os.path.splitext(os.path.basename(__file__))[0]
+        self.__fichier_kp = f"{nom_fichier}_cle_publique.pem"
+        self.__fichier_km = f"{nom_fichier}_cle_privee.pem"
+        # Chargement de la clé publique
+        with open(self.__fichier_kp, "rb") as f:
+            Kp = f.read()
+        # Chargement de la clé privée
+        with open(self.__fichier_km, "rb") as g:
+            Km = g.read()
+        return Kp, Km
+
+
+class ECDHE:
+    """
+    Classe du chiffrement ECDHE (Diffie Hellman Ephémère à Courbe Elliptique) sur la courbe Scep256r1
+         
+    Méthodes:
+        cle_privee() : Calcul de la clé privée
+        cle_publique() : Calcul de la clé publique
+        cle_partagee() : Calcul de la clé partagée
+        signer(message) : Signe un message
+        flux_sha512() : Génère un flux pseudo-aléatoire
+        chiffrer(message) : Chiffre / déchiffre un message
+    """
+    def __init__(self):
+        self.__Gx = secp.Gx
+        self.__Gy = secp.Gy
+    
+    @property
+    def G(self) -> list:
+        """Renvoie le point générateur G"""
+        self.__G = [hex(self.__Gx), hex(self.__Gy)]
+        return self.__G
+    
+    @property
+    def Km(self) -> int:
+        """Renvoie ma clé privée"""
+        return self.__Km
+    
+    @property
+    def Kp(self) -> tuple:
+        """Renvoie la clé publique"""
+        return self.__Kp
+    
+    @property
+    def K(self) -> tuple:
+        """Renvoie la clé partagée"""
+        return self.__K
+    
+    def cle_privee(self) -> int:
+        """
+        Calcul de la clé privée
+        
+        Renvoie:
+            Km (int) : Clé privée
+        """
+        self.__Km = rds.randint(1, secp.n-1)
+        return self.__Km
+    
+    def cle_publique(self) -> tuple:
+        """
+        Calcul de la clé publique
+        
+        Renvoie:
+            Kp (tuple) : Clé publique
+        """
+        self.__Kp = secp.montgomery_ladder(self.__Km, self.__Gx, self.__Gy)
+        return self.__Kp
+    
+    def cle_partagee(self, Kp1: list) -> tuple:
+        """
+        Calcul de la clé partagée
+        
+        Attribut:
+            Kp1 (tuple) : Clé partagée de l'interlocuteur
+        """
+        self.__K = secp.montgomery_ladder(self.__Km, Kp1[0], Kp1[1])
+        return self.__K
+    
+    def signer(self, message: bytes) -> hex:
+        """
+        Signe un message
+        
+        Attribut:
+            message (bytes) : Message à chiffrer ou déchiffrer
+            
+        Renvoie:
+            signe (hex) : Message signé
+        """
+        Kx = self.__K[0]
+        key = Kx.to_bytes((Kx.bit_length() + 7) // 8, byteorder='big')
+        bloc = 128
+        
+        # Étape 1 : Ajuster la clé
+        if len(key) > bloc:
+            key = rd._sha512(key).digest()  # hacher si trop long
+        if len(key) < bloc:
+            key = key.ljust(bloc, b'\x00')  # compléter avec des zéros
+        
+        # Étape 2 : Créer ipad et opad
+        ipad = bytes((x ^ 0x36) for x in key)
+        opad = bytes((x ^ 0x5c) for x in key)
+    
+        # Étape 3 : Calcul HMAC
+        inner_hash = rd._sha512(ipad + message).digest()
+        hmac_result = rd._sha512(opad + inner_hash).hexdigest()
+        return hmac_result
+
+    def chiffrer(self, message):
+        """
+        Chiffre un message
+        
+        Attribut:
+            message (bytes/str) : message à chiffrer (str) ou à déchiffrer (bytes)
+        
+        Renvoie:
+            chiffre (bytes/str) : message chiffré (bytes) ou déchiffré (str)
+        """
+        # Caractéristiques du message
+        drapeau = 0
+        if isinstance(message, str):
+            message = message.encode("utf-8")
+            drapeau = 1
+        elif isinstance(message, bytes):
+            message = message
+            drapeau = 2
+        else:
+            raise ValueError("Le format n'est pas correcte, veuillez renseigner un str ou un bytes.")
+        cleX = self.__K[0]
+        nombre = (cleX.bit_length() + 7) // 8
+        cle = cleX.to_bytes(nombre, byteorder='big')    
+        longueur = len(message)
+        # Balance XOR
+        flux = b""
+        compteur = 0
+        while len(flux) < longueur:
+            # Concatène la clé avec un compteur pour produire des blocs uniques
+            block = rd._sha512(cle + compteur.to_bytes(8, 'big')).digest()
+            flux += block
+            compteur += 1
+        # Chiffré
+        chiffre = flux[:longueur]     
+        #resultat = bytes([m ^ k for m, k in zip(message, chiffre)])
+        
+        if drapeau == 1:
+            resultat = bytes([m ^ k for m, k in zip(message, chiffre)])
+        elif drapeau == 2:
+            resultat = bytes([m ^ k for m, k in zip(message, chiffre)]).decode("utf-8")
+        
+        return resultat
+
+
 print("Merci d'utiliser ROTATOR")
 
 if __name__ == "__main__":
@@ -666,43 +944,38 @@ if __name__ == "__main__":
     kp = rd.randint(0, x25519-1)
     k = DH(x25519,999,kp)
     # Le module os est intégré dans random
-    os = rd._os
     os.path.exists('rotator.py')
     h = RSA()
-    h.cles(320)
+    
+    
+    # Génère des clés de 3 x 683 hex = 2049 bits
+    if not os.path.exists(f"{os.path.splitext(os.path.basename(__file__))[0]}_cle_publique.pem"):
+        h.cles(683)
+        h.sauvegarde_cles()
+    
+
+    ma_cle_publique, ma_cle_privee = h.chargement_cles()
+    
+    Kp = [x for x in ma_cle_publique.decode().replace("\r", "").split("\n") if x]
+    Km = [x for x in ma_cle_publique.decode().replace("\r", "").split("\n") if x]
+    
+    """
+    h.Km = Km
+    h.Kp = Kp
+    """
+    
+    
     a = A64()
-
-
-
-
-
-
-
-"""
-
-def conversion(nombre):
-    resultat = []
-    for i in range:
-        
-        
-    return resultat
-        
     
-    
-   
-    quotient, reste = divmod(nombre, 64)
-    i
+    liste_alfa = rd.sample(range(64), 64)
     
     
     
+   # Appuyer sur ctrl + T
     
     
-    while not nombre%64 == 0:
-        x = nombre//64
-        nombre = nombre%64
-        return x
- """   
-    
+
+
 
 
 
