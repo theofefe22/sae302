@@ -6,13 +6,12 @@ Plus d'informations sur https://github.com/theofefe22/sae302
 2025 - Altech Industries - Tous droits réservés
 
 """
-# BIBLIOTHEQUES
+# BIBLIOTHEQUES IMPORTEES
 import socket
 import random as rd
 from sympy import isprime as isp
 import __logo
 import __gui as gui
-import __secp256r1 as secp
 import mysql.connector
 
 
@@ -27,11 +26,15 @@ os = rd._os
 
 # FONCTIONS COMMUNES
 def nom():
-    """Renvoie le nom de la machine"""
+    """
+    Renvoie le nom de la machine
+    """
     return socket.gethostname()
 
 def ip():
-    """Renvoie l'adresse IPv4 de la machine"""
+    """
+    Renvoie l'adresse IPv4 de la machine
+    """
     return socket.gethostbyname(socket.gethostname())
 
 
@@ -47,94 +50,124 @@ class A64:
     Méthodes:
         alfa() : Choix de l'alphabet
         binalfa() : Conversion de l'alphabet sur 6 bits
+        z64() : Conversion d'un entier vers base 64 0z
+        z64_inverse() : Conversion d'un base 64 0z vers un entier
     """
-    def __init__(self, numero_alphabet: int = 2, nombre: int = None) -> None:
+    def __init__(self, numero_alphabet: int = 2) -> None:
         self.__x = numero_alphabet
-        self.__nb = nombre
+
+    def alfa(self, numero_alphabet: int = None) -> str:
+        """
+        Renvoie un alphabet choisi
         
-    @property
-    def x(self) -> int:
-        """Renvoie le numéro de l'alphabet"""
-        return self.__x
-    
-    @x.setter
-    def x(self, x: int) -> None:
-        """Modifie le numéro de l'alphabet"""
-        if isinstance(x, int):
-            self.__x = x
-        else:
-            raise ValueError("Le format n'est pas correcte.")
-        
-    @property
-    def nb(self) -> int:
-        """?"""
-        return self.__nb
-    
-    @nb.setter
-    def nb(self, nb: int) -> None:
-        """Modifie ?"""
-        if isinstance(nb, int):
-            self.__nb = nb
-        else:
-            raise ValueError("Le format n'est pas correcte.")
-    
-    def alfa(self, x: int = None):
-        """Renvoie un alphabet choisi"""
-        if x == None:
-            x = self.__x
-        if x == 1:
+        Attribut :
+            numero_alphabet (int) : Numéro de l'alphabet choisi
+        """
+        # Caractéristique numéro alphabet
+        if numero_alphabet == None:
+            numero_alphabet = self.__x
+        # Caractéristiques alphabets
+        if numero_alphabet == 1:
             alfa = "kZf3TgRHDyAw2dXvMj7U0CcN Bl5QsI1oPpE8beLaKnVzYxWiOhJ6GqSrt4uF9m!"
-        elif x == 2:
+        elif numero_alphabet == 2:
             alfa = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcd efghijk!lmnopqrstuvwxyz1234567890"
-        elif x == 3:
+        elif numero_alphabet == 3:
             alfa = "ae7RdcPnrk2gWQDOUuFhM4KLptvz9XEG5ob1ICZNYi0A6x 8JlHTfsyjVmqwBS3!"
-        elif x == 4:
+        elif numero_alphabet == 4:
             alfa = "dRuAWDrQJiHhL1FSg5a7ps0OfG36Eot8bBCk9PUcT4 qZj!NnYXzwMVmK2lIvexy"
-        elif x == 5:
+        elif numero_alphabet == 5:
             alfa = "EACzHvjsSY0f5PMIJNGq246WtDao bdhrFgulZxcVKw39Q1LBT8O7UXRmi!ykpen"
-        elif x == 6:
+        elif numero_alphabet == 6:
             alfa = "hSz2 cEaojei3ldqD0Oy67JH4Q8CYKBIfpRT!wbnmkvtL9NMVAsrg5ZFxuGPUWX1"
-        elif x == 7:
+        elif numero_alphabet == 7:
             alfa = "t5BQyO098rb!PAEWdlpN6YXMks3quJ HoGURw1DxghfFcV2avmInTZK7zLSjCe4i"
-        elif x == 8:
+        elif numero_alphabet == 8:
             alfa = "wcQIB7r281tDJXqOkLjbFug3GdHUy0KRS5oElVxPMTW!vmZNpn CfA96esYa4zih"
-        elif x == 9:
+        elif numero_alphabet == 9:
             alfa = "xB5 mcEHquKJoLyOtTrRM8XQnli!kZFgf9Nh4a62pwGU70esVSC3DdWAPYIvj1bz"
-        elif x == 10:
+        elif numero_alphabet == 10:
             alfa = "KkGYiq gTBVtXxJwCfZ7mQphb39Ooen!c1RNuUSjE2arlDPL08zI6yF4H5MWAsvd"
         else:
             raise ValueError("L'alphabet n'existe pas.")
         return alfa
     
-    def binalfa(self, x: int = None):
-        if x == None:
-            x = self.__x
-        if x < 5:
-            binalfa = {lettre: format(i, '06b') for i, lettre in enumerate(self.alfa(x))}
+    def binalfa(self, numero_alphabet: int = None) -> dict:
+        """
+        Conversion de l'alphabet choisi vers un dictionnaire avec le caractère associé à une valeur binaire sur 6 bits
+        
+        Arguments:
+            numero_alphabet (int) : Numéro de l'alphabet choisi
+        
+        Renvoie:
+            binalfa (dict) : Dictionnaire de l'alphabet utilisé
+        """
+        # Caractéristiques numéro alphabet
+        if numero_alphabet == None:
+            numero_alphabet = self.__x
+        if 0 < numero_alphabet < 11:
+            binalfa = {lettre: format(i, '06b') for i, lettre in enumerate(self.alfa(numero_alphabet))}
         else:
             raise ValueError("L'alphabet n'existe pas.")
         return binalfa
     
-    def z64(self, nombre: int = None, alfabet: int = None):
+    def z64(self, nombre: int = None, numero_alphabet: int = None) -> str:
+        """
+        Conversion d'entier vers z64
+        
+        Arguments:
+            nombre (int) : Nombre à convertir
+            numero_alphabet (int) : Numéro de l'alphabet à utiliser
+        
+        Renvoie:
+            nombre_convertit (str) : Nombre convertit base 64, avec préfixe 0z
+        """
         # Caractéristiques du nombre
         if nombre == None:
             nombre = rds.randint(123,8973218)
         elif not isinstance(nombre, int):
             raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'int'.")
-        # Caractéristiques de l'alfabet à utiliser
-        if alfabet == None:
-            alfabet = 2
-        elif not isinstance(message, int):
+        # Caractéristiques de l'alphabet à utiliser
+        if numero_alphabet == None:
+            numero_alphabet = 2
+        elif not isinstance(numero_alphabet, int):
             raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'int'.")
         # Si le nombre vaut zéro
         if nombre == 0:
-            return "0z" + alfa(2)[0]
+            return "0z" + alfa(numero_alphabet)[0]
         # Sinon
         symbol = []
         while nombre > 0:
             nombre, reste = divmod(nombre, 64)
-            symbol.append(self.alfa(2)[reste])
+            symbol.append(self.alfa(numero_alphabet)[reste])
         return "0z" + "".join(reversed(symbol))
+    
+    def z64_inverse(self, nombre_0z: str, alfabet: int = 2) -> int:
+        """
+        Conversion de z64 en entier
+        
+        Arguments:
+            nombre (str) : Nombre base 0z à convertir
+            alfabet (int) : Numéro de l'alphabet à utiliser
+        
+        Renvoie:
+            nombre (int) : Entier déconvertit
+        """
+        # Caractéristiques nombre_0z
+        if not isinstance(nombre_0z, str):
+            raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'str'.")
+        if not nombre_0z.startswith("0z"):
+            raise ValueError("Le code doit être une chaîne commençant par '0z'.")
+        # Variables
+        nombre_0z = nombre_0z[2:]
+        alfa = self.alfa(alfabet)
+        nombre = 0
+        # Programme principal
+        for caractere in nombre_0z:
+            if caractere not in alfa:
+                raise ValueError(f"Le caractère '{caractere}' n'est pas dans l'alphabet.")
+            valeur = alfa.index(caractere)
+            nombre = nombre * 64 + valeur
+        return nombre
 
 
 class BDD:
@@ -146,29 +179,64 @@ class BDD:
         port (int) : Port de connexion au serveur
         
     Méthodes:
-        connexion() : Connexion au serveur
-        enoie(message) : Envoie d'un message au serveur
-        recption() : Message reçu du serveur
-        fin() : Fermeture de la connexion au serveur
+        insert() : Insertion de données
+        recupert(message) : Récuperation de données
+        fermer() : Fermeture de la connexion à la base de données
     """
-    def __init__(self, hote, utilisateur, mdp, bdd):
-        self.__bdd = mysql.connector.connect(host=hote, user=utilisateur, password=mdp, database=bdd)
+    def __init__(self, hote, utilisateur, mdp, base):
+        self.__bdd = mysql.connector.connect(host = hote, user = utilisateur, password = mdp)
         self.cursor = self.__bdd.cursor()
-    
-    def commit(self):
-        self.__bdd.commit()
+        self.__base = base
         
-    def insert(self, nom, ip, port, kp):
+        try:
+            self.cursor.execute(f"CREATE DATABASE IF NOT EXISTS {self.__base}")
+            print(f"Base '{self.__base}' créée ou déjà existante.")
+        except mysql.connector.Error as err:
+            print("Erreur création base:", err)
+
+        # Se connecter à la base créée
+        self.cursor.execute(f"USE {self.__base}")
+
+    @property
+    def base(self) -> str:
+        """Renvoie la base de données utilisé"""
+        return self.__base
+        
+    def inserer(self, table: str, ip: str, port: int, kp: list) -> None:
+        """
+        Insertion de données
+        
+        Arguments:
+            table (str) : Table à utiliser
+            ip (str) : IP à insérer
+            port (int) : Port à insérer
+            kp (list) : Clé publique à insérer
+        """
         n = kp[0]
         e = kp[1]
-        sql = "INSERT INTO Routeurs2 (nom, ip, port, n, e) VALUES (%s, %s, %s, %s, %s)"
-        valeurs = [(nom, ip, port, n, e)]
-        self.cursor.executemany(sql, valeurs)
-        self.commit()
-        print(self.cursor.rowcount, "lignes insérées.")
-        self.cursor.close()
+        sql = f"INSERT INTO {table} (ip, port, n, e) VALUES (%s, %s, %s, %s)"
+        valeurs = (ip, port, n, e)
+        self.cursor.execute(sql, valeurs)
+        self.__bdd.commit()
+        print(self.cursor.rowcount, f"lignes insérées dans la table {table}.")
+        
+    def recuperer(self, table: str) -> list:
+        """
+        Récuperation de données
+        
+        Arguments:
+            table (str) : Table à utiliser
+        """
+        sql = f"SELECT * FROM {table}"
+        self.cursor.execute(sql)
+        liste = self.cursor.fetchall()
+        return liste
     
-    def fermer(self):
+    def fermer(self) -> None:
+        """
+        Fermeture de la connexion à la base de données
+        """
+        self.cursor.close()
         self.__bdd.close()
 
 
@@ -241,21 +309,43 @@ class Client:
             message : Message à envoyer
         """
         
-        if isinstance(message, list):
-            message = ",".join(str(x) for x in message) #"LI" + 
-        #elif isinstance(message, str):
-            #self.srv.send(message.encode())
+        if isinstance(message, dict):
+            message = ",".join(str(x) for x in message)
         
         message = message.encode()
         longueur = len(message)
         if longueur>1020:
             print(f"Message long de {len(message)}")
             front = longueur.to_bytes(4,"big")
-        
-        self.srv.sendall(front + message)
-        #sock.sendall(header + data)
-        #self.srv.send(message)
+            self.srv.sendall(front + message)
+        else:
+            self.srv.send(message)
         print(f"Message envoyé : {message}")
+        
+    def certificat(self, Kp):
+        """
+        r
+        """
+        
+        
+        
+        taille_cle = 2048
+        
+        Kp = {"n" : 456, "e" : 853}
+        
+        n = Kp["n"]
+        e = Kp["e"]
+        ip = "15.46.46.8"
+        
+        parametres = n
+        
+        message = "".join(parametres) + b"ZOUZOUZOUBISOU" 
+        
+        
+        #for i in 
+        
+        
+        
 
     def reception(self) -> None:
         """Affiche un message reçu du serveur"""
@@ -269,7 +359,7 @@ class Client:
             liste = [int(x) for x in liste.split(",")]
         """
         print(f"Message reçu : {msg.decode()}")
-        return msg
+        return msg.decode()
 
     def fin(self) -> None:
         """Met fin à la connexion au serveur"""
@@ -291,11 +381,20 @@ class Serveur:
         message_client() : Affiche le message reçu
     """
     def __init__(self, port: int = 1200) -> None:
-        """Initialisation de l'IP et du port du serveur"""
+        """
+        Initialisation de l'IP et du port du serveur
+        """
         self.__adr = "0.0.0.0"
         self.__port = port
         self.srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.srv.bind((adresse, port))
+        while True:
+            try:
+                self.srv.bind((self.__adr, self.__port))
+                break
+            except OSError as e:
+                if e.errno == 10048:
+                    self.__port += 1
+        print(f"Serveur en écoute sur le port {self.__port}")
         self.srv.listen(5)
         
     @property
@@ -317,21 +416,28 @@ class Serveur:
             raise ValueError("Le format n'est pas correcte.")
             
     def ecoute(self) -> tuple:
-        """Ecoute les clients qui veulent se connecter"""
+        """
+        Ecoute les clients qui veulent se connecter
+        
+        Renvoie :
+            cs : Socket du client
+            adr : Adresse du client
+        """
         cs, adr = self.srv.accept()
         print(f"Une connexion a été acceptée depuis {adr}")
         cs.send("Bienvenue".encode())
         self.__cs = cs
         return cs, adr
     
-    def message_client(self) -> bytes:
+    def message_client(self) -> str:
         """Affiche le message reçu"""
         clientsocket = self.__cs
-        msg = clientsocket.recv(1024).decode()
+        try:
+            msg = clientsocket.recv(1024).decode()
+        except ConnectionResetError:
+            print("Le client a fermé la connexion brutalement")
         if not msg:
-            print("Fin de la transmission")
-            clientsocket.close()
-            return None
+            print("Aucun message reçu pour le moment")
         print("Message reçu :", msg)
         return msg
 
@@ -340,7 +446,7 @@ class Maths:
     """
     Classe des fonctions mathématiques
         
-    Méthodes:
+    Méthodes :
         euclide_etendu(a, b) : Calcul les coefficients de Bézout tels que d = pgcd(a, b) = a*u + b*v
         gp(nombre_bits) : Génère un nombre premier de n (nombre_bits) bits
         pgcd(a, b) : Calcul le plus grand commun diviseur (PGCD) de deux nombres a et b
@@ -350,8 +456,17 @@ class Maths:
         pass
  
     @staticmethod
-    def euclide_etendu(a, b):
-        """Renvoie un tuple (d, u, v) tel que d = gcd(a, b) et au + bv = d"""
+    def euclide_etendu(a: int, b: int) -> tuple:
+        """
+        Renvoie un tuple (d, u, v) tel que d = gcd(a, b) et au + bv = d
+        
+        Attributs :
+            a (int) : Paramètre a
+            b (int) : Paramètre b
+        
+        Renvoie :
+            d, u, v (tuple) : Les paramètres d, u et v
+        """
         if b == 0:
             return (a, 1, 0)
         else:
@@ -361,30 +476,33 @@ class Maths:
             return (d, u, v)
         
     @staticmethod
-    def gp(nombre_bits):
-        """Génère un nombre premier ayant n (nombre_bits) bits"""
+    def gp(nombre_bits: int) -> int:
+        """
+        Génère un nombre premier ayant n (nombre_bits) bits
+        
+        Attribut :
+            nombre_bits (int) : Longueur en bits du nombre généré
+            
+        Renvoie :
+            nombre (int) : Nombre premier généré
+        """
         nombre = 0
         while not isp(nombre): # Tant que le nombre n'est pas premier
             nombre = rds.getrandbits(nombre_bits) # Génère un nombre aléatoire de n bits
             nombre |= (1 << nombre_bits - 1) | 1  # S'assure que c'est bien un nombre de n bits et impair et ou logique avec nombre
         return nombre
-    
-    """
-    @staticmethod
-    def matrice(a: int, b: int) -> int:
-        while b != 0:
-            a, b = b, a % b
-        return a
-    """
 
     @staticmethod
     def pgcd(a: int, b: int) -> int:
         """
         Calcul le plus grand commun diviseur (PGCD)
         
-        Arguments:
+        Attributs :
             a (int) : Coefficient a
             b (int) : Coefficient b
+        
+        Renvoie :
+            a (int) : Plus grand diviseur commun
         """
         while b != 0:
             a, b = b, a % b
@@ -395,292 +513,173 @@ class Maths:
         """
         Calcul si deux nombres sont premiers entre eux
         
-        Arguments:
+        Attributs :
             a (int) : Coefficient a
             b (int) : Coefficient b
+        
+        Renvoie :
+            reponse (bool) : Vrai si les deux nombres sont premiers entre eux, sinon Faux
         """
-        return Maths.pgcd(a, b) == 1
-
-
-class DH:
-    """
-    Classe des clés de Diffie-Hellman
-    
-    Attributs:
-        p (int) : Paramètre publique, nombre premier
-        g (int) : Paramètre publique, avec g < 1
-        Kp1 (int) : Clé publique reçue
-        
-    Méthodes:
-        connexion() : Connexion au serveur
-        enoie(message) : Envoie d'un message au serveur
-        recption() : Message reçu du serveur
-        fin() : Fermeture de la connexion au serveur
-        
-    Renvoie:
-        Kp0 (int) : Clé publique à transmettre
-        Km (int) : Clé privée
-        K (int) : Clé partagée
-    """
-    def __init__(self, p: int = x25519, g: int = None, Kp1: int = None) -> None:
-        self.__p = p
-        self.__g = g
-        self.__Kp1 = Kp1
-        
-    @property
-    def Kp0(self) -> int:
-        """Renvoie la clé publique à transmettre"""
-        return self.__Kp0
-    
-    @property
-    def Kp1(self) -> int:
-        """Renvoie la clé publique reçue"""
-        return self.__Kp1
-    
-    @Kp1.setter
-    def Kp1(self, Kp1: int):
-        """Modifie la clé publique reçue"""
-        if isinstance(Kp1, int):
-            self.__Kp1 = Kp1
-        else:
-            raise ValueError("Le format n'est pas correcte.")
-        
-    @property
-    def K(self) -> int:
-        """Renvoie la clé partagée"""
-        return self.__K
-        
-    def cles(self) -> int:
-        """Calcule les clés de Diffie-Hellman"""
-        p = self.__p
-        # Si p = x25519 alors la longueur est de 77 caractères
-        g = self.__g
-        # Détermine la clé privée, de taille inférieur ou égale à p
-        Km = rds.randint(0, p-1)
-        self.__Km = Km
-        # Calcul la clé publique, de taille inférieur ou égale à p
-        Kp0 = pow(g, Km, p)
-        self.__Kp0 = Kp0
-        return [Kp0, Km]
-        
-    def secret(self) -> int:
-        """Détermine la clé partagée"""
-        Kp1 = self.__Kp1
-        Km = self.__Km
-        p = self.__p
-        K = pow(Kp1, Km, p)
-        self.__K = K
-        return K
+        reponse = Maths.pgcd(a, b) == 1
+        return reponse
 
 
 class RSA:
     """
     Classe des clés de RSA
-    
-    Attributs:
-        p (int) : Paramètre publique, nombre premier
-        g (int) : Paramètre publique, avec g > 1
-        Kp1 (int) : Clé publique reçue
         
-    Méthodes:
-        cles() : Calcul les clés
-        chiff() : Chiffre un message
+    Méthodes :
+        cles() : Calcul les clés RSA
+        chiff() : Chiffre un message, avec la clé publique du receveur
         dechiff() : Déchiffre un message
         
-    Renvoie:
+    Renvoie :
         Kp0 (int) : Clé publique à transmettre
         Km (int) : Clé privée
-        K (int) : Clé partagée
-    """
-    def __init__(self, message_a_chiffrer: str = "Hell", message_a_dechiffrer: int = None, Kp1: list = None) -> None:
-        self.__m0 = message_a_chiffrer
-        self.__c1 = message_a_dechiffrer
-        self.__Kp1 = Kp1
-        self.__fichier_km = ""
-        
-    @property
-    def c0(self) -> int:
-        """Renvoie le mot chiffré par moi et codé sur un entier"""
-        return self.__c0
-    
-    @property
-    def m0(self) -> int:
-        """Renvoie le mot à envoyer"""
-        return self.__m0
-    
-    @m0.setter
-    def m0(self, m0: str):
-        """Modifie le mot à envoyer"""
-        if isinstance(m0, str):
-            self.__m0 = m0
-        else:
-            raise ValueError("Le format n'est pas correcte.")
-    
-    @property
-    def c1(self) -> int:
-        """Renvoie le mot chiffré par l'autre et codé sur un entier"""
-        return self.__c1
-    
-    @c1.setter
-    def c1(self, c1: int):
-        """Modifie le mot chiffré par l'autre et codé sur un entier"""
-        if isinstance(c1, int):
-            self.__c1 = c1
-        else:
-            raise ValueError("Le format n'est pas correcte.")
-    
-    @property
-    def m1(self) -> int:
-        """Renvoie le mot reçu déchiffré"""
-        return self.__m1
-    
+    """    
     @property
     def delta(self) -> int:
-        """Renvoie le mot reçu déchiffré"""
+        """Renvoie le delta de la clé privée"""
         return self.__delta
     
     @property
-    def fichier_km(self):
+    def fichier_Km(self):
         """Renvoie l'emplacement du fichier de la clé privée"""
         return self.__fichier_km
     
     @property
     def Km(self) -> int:
         """Renvoie la clé privée"""
-        return self.__Km
+        return self.__cle_privee
     
     @property
-    def fichier_kp(self):
+    def fichier_Kp(self):
         """Renvoie l'emplacement du fichier de la clé privée"""
         return self.__fichier_kp
     
     @property
     def Kp(self) -> int:
         """Renvoie la clé publique"""
-        return self.__Kp
-    
-    @property
-    def Kp1(self) -> int:
-        """Renvoie la clé publique reçue"""
-        return self.__Kp1
-    
-    @Kp1.setter
-    def Kp1(self, Kp1: int):
-        """Modifie la clé publique reçue"""
-        if isinstance(Kp1, int):
-            self.__Kp1 = Kp1
-        else:
-            raise ValueError("Le format n'est pas correcte.")
-    
-    @property
-    def n(self) -> int:
-        """Renvoie la clé partagée"""
-        return self.__n
+        return self.__cle_publique
         
-    def cles(self, nombre_bits):
-        """Renvoie les clés partagée et privée RSA"""
-        nb = nombre_bits
-        if nb < 200:
+    def cles(self, nombre_bits: int = 512) -> dict:
+        """
+        Renvoie les clés partagée et privée RSA
+        
+        Attribut :
+            nombre_bits (int) : Nombre de symboles hexadécimales de la clé RSA (1 symbole hexa = 4 bits)
+        
+        Renvoie :
+            cle_privee (dict), cle_publique (dict) : La clé privée et la clé publique
+        """
+        # Caractéristiques nombre de bits
+        if not isinstance(nombre_bits, int):
+            raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'str'.")
+        elif nombre_bits < 200:
             raise ValueError("Veuillez renseigner une valeur plus grande.")
-        p = Maths.gp(3*nb)
-        q = Maths.gp(nb)
-        delta = abs(p-q)
-        self.__delta = delta
-        n = p*q
-        phi_n = (p-1)*(q-1)
-        e = phi_n
+        # Boucle de génération des paramètres p et q
+        while True:
+            p = Maths.gp(2 * nombre_bits)
+            q = Maths.gp(2 * nombre_bits)
+            self.__delta = abs(p - q)
+            if self.__delta >= 2**100:
+                break
+        # Calcul de n et phi(n)
+        n = p * q
+        phi_n = (p - 1) * (q - 1)
         # Calcul du coefficient e
+        e = phi_n
         while True:
             if Maths.premiers_entre_eux(phi_n, e) == False:
-                e = Maths.gp(int(1.8*nb))
+                e = Maths.gp(int(1.8 * nombre_bits))
             else:
                 break
         # Calcul des coefficients tels que e*u + phi_n*v = pgcd(e,phi_n) = g = 1
         g, u, v = Maths.euclide_etendu(e, phi_n)
         # Calcul du coefficient d
-        d = u%phi_n
+        d = u % phi_n
         # Clé privée
-        Km = [hex(p), hex(q), hex(d)]
-        self.__Km = Km
-        # Clé publique
-        Kp = [hex(n), hex(e)]
-        self.__Kp = Kp
-        print(f"Des clés RSA de taille {3*nombre_bits} bits ont été générées")
-        return [Kp, Km]
+        self.__cle_privee = {"p": hex(p), "q": hex(q), "d": hex(d)}
+        # Clé publique        
+        self.__cle_publique = {"n": hex(n), "e": hex(e)}
+        # Longueur clés
+        longueur = (len(hex(n)) - 2) * 4
+        print(f"Des clés RSA de taille {longueur} bits ont été générées")
+        return self.__cle_privee, self.__cle_publique
     
-    def chiff(self, message: str = None, Kp1: list = None):
+    def chiffrer(self, message: str = None, Kp1: dict = None) -> hex:
         """
         Chiffre un message, en utilisant la clé publique d'un autre
         
-        Arguments:
+        Attributs :
             message (str) : Message à déchiffrer
-            Kp1 (list) : Clé publique de l'autre
+            Kp1 (dict) : Clé publique de l'autre
+        
+        Renvoie :
+            chiffre (hex) : Message chiffré
         """
         # Caractéristiques du message à chiffrer
         if message == None:
-            message = self.__m0
+            raise ValueError("Veuilez renseigner un message à chiffrer.")
         elif not isinstance(message, str):
             raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'str'.")
-        self.__m0 = message
         # Caractéristiques de la clé publique de l'autre
         if Kp1 == None:
             raise ValueError("Veuillez renseigner la clé publique de l'autre")
-        elif Kp1 == self.__Kp:
+        elif Kp1 == self.__cle_publique:
             raise ValueError("Veuillez renseigner la clé publique de l'autre, pas la vôtre")
-        elif not isinstance(Kp1, list):
-            raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'list'.")
+        elif not isinstance(Kp1, dict):
+            raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'dict'.")
+        # Paramètres
+        n1 = int(Kp1["n"], 16)
+        e1 = int(Kp1["e"], 16)
         # Transformation du message en entier
-        m0 = int.from_bytes(message.encode(), byteorder='big')
-        if m0 >= self.__n:
-            raise ValueError(f"Le message est trop grand pour ce module RSA. Message = {hex(m0)} > {hex(self.__n)}")
+        message_entier = int.from_bytes(message.encode("utf-8"), byteorder='big')
+        if message_entier >= n1:
+            raise ValueError(f"Le message est trop grand pour ce module RSA. Message = {hex(message_entier)} > {hex(n1)}")
         # Calcul du message chiffré
-        n1 = int(Kp1[0],16)
-        e1 = int(Kp1[1],16)
-        c0 = hex(pow(m0, e1, n1))
-        self.__c0 = c0
-        return c0
+        chiffre = hex(pow(message_entier, e1, n1))
+        return chiffre
 
-    def dechiff(self, message_a_dechiffrer: int = None):
+    def dechiffrer(self, message_a_dechiffrer: hex = None) -> str:
         """
         Déchiffre un message, en utilisant ma clé privée
         
-        Argument:
-            message_a_dechiffrer (int) : Message à déchiffrer
+        Attribut :
+            message_a_dechiffrer (hex) : Message à déchiffrer
+        
+        Renvoie :
+            dechiffre (str) : Message déchiffré
         """
         # Caractéristiques du message à déchiffrer
-        c1 = int(message_a_dechiffrer, 16)
-        if c1 == None:
-            c1 = self.__c1
-        elif not isinstance(c1, int):
-            raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'int'.")
+        if message_a_dechiffrer == None:
+            raise ValueError("Veuilez renseigner un message à déchiffrer.")
+        elif isinstance(message_a_dechiffrer, int):
+            message_a_dechiffrer_entier = message_a_dechiffrer
+        elif isinstance(message_a_dechiffrer, hex):
+            message_a_dechiffrer_entier = int(message_a_dechiffrer, 16)
+        elif not isinstance(message_a_dechiffrer, hex):
+            raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'hex'.")
         # Caractéristiques de ma clé publique
-        Km = self.__Km
-        d0 = int(Km[2],16)
-        n0 = int(Km[0],16)*int(Km[1],16)
-        m1 = pow(c1, d0, n0)
-        m1 = m1.to_bytes((m1.bit_length() + 7)//8, 'big').decode()
-        return m1
+        d0 = int(self.__cle_privee["d"], 16)
+        n0 = int(self.__cle_privee["p"], 16) * int(self.__cle_privee["q"], 16)
+        # Déchiffrage
+        dechiffre_entier = pow(message_a_dechiffrer_entier, d0, n0)
+        nombre_bits = len(bin(dechiffre_entier)) - 2
+        nombre_octets = (nombre_bits + 7) // 8 # +7 pour arrondir au supérieur
+        dechiffre = dechiffre_entier.to_bytes(nombre_octet, 'big').decode("utf-8")
+        return dechiffre
     
-    def hacher1(self, message: str) -> hex:
-        """
-        Hache un message
-        
-        Argument:
-            message (str) : Message à hacher
-        """
-        valeur_hachage = 5381
-        for caractere in message:
-            valeur_hachage = ((valeur_hachage << 5) + valeur_hachage) + ord(caractere)
-            valeur_hachage &= 0xFFFFFFFFFFFFFFFF
-        return hex(valeur_hachage)
-    
-    def hacher2(self, message: str = None, sel: bytes = None):
+    def hacher2(self, message: str = None, sel: bytes = None) -> dict:
         """
         Hache un message en utilisant SHA512
         
-        Argument:
+        Attributs :
             message (str) : Message à hacher
             sel (bytes) : Sel du haché
+        
+        Renvoie :
+            digere, sel (dict)
         """
         msgb = bytes(message, "utf-8")
         # Caractéristiques du sel
@@ -692,7 +691,7 @@ class RSA:
         sha512 = rd._sha512
         hachis = sha512(msgb + sel)
         digere = hachis.digest()
-        return [digere,sel]
+        return {"digere" : digere, "sel" : sel}
     
     def signer(self, message_a_signer: str = None) -> list:
         """
@@ -723,13 +722,13 @@ class RSA:
         signe = pow(hache, d0, n0)
         return [message_a_signer, hex(signe), sel]
     
-    def verifier(self, message_signe: str, methode_hache: int = 2, Kp1: list = None):
+    def verifier(self, message_signe: str, methode_hache: int = 2, Kp1: dict = None) -> bool:
         """
         Vérifie la signature d'un message
         
         Arguments:
             message_signe (str) : Message à signer
-            Kp1 (list) : La clé publique de l'autre
+            Kp1 (dict) : La clé publique de l'autre
         """
         # Caractéristiques clé publique de l'autre
         if Kp1 == None:
@@ -760,10 +759,16 @@ class RSA:
             print("La signature n'est pas bonne")
             return False
 
-
-    def sauvegarde_cles(self):
+    def sauvegarde_cles(self, nom_fichier: str, alfa: int, K: int) -> None:
+        """
+        Sauvergarde les clés RSA dans un fichier .pem
+        
+        Arguments:
+            nom_fichier (str) : Nom racine du fichier
+            alfa (int) : Numéro de l'alphabet de cryptage choisi
+            K (int) : Coordonnée x de la clé partagée ECDHE
+        """
         # Création des fichiers
-        nom_fichier = os.path.splitext(os.path.basename(__file__))[0]
         self.__fichier_kp = f"{nom_fichier}_cle_publique.pem"
         print(f"Le fichier {self.__fichier_kp} a été crée.")
         self.__fichier_km = f"{nom_fichier}_cle_privee.pem"
@@ -771,216 +776,55 @@ class RSA:
         # Enregistrement de la clé publique
         with open(self.__fichier_kp, "w") as f:
             for item in self.__Kp:
-                f.write(f"{item}\n")
+                f.write(f"{item}\n")       
         # Enregistrement de la clé privée
-        with open(self.__fichier_km, "w") as g:
+        with open(self.__fichier_km, "wb") as g:
             for item in self.__Km:
-                g.write(f"{item}\n")
+                g.write(ECDHE().chiffrer(A64().z64(int(item, 16), alfa), K) + b"ZOUZOUZOUBISOU")
         print("Enregistrement des clés effectué avec succès.")
-            
-    def chargement_cles(self):
+        
+    def chargement_cles(self, nom_fichier: str, alfa: int, K: int) -> dict:
         """
-        Chargement des clés
+        Charge les clés RSA
+        
+        Arguments:
+            nom_fichier (str) : Nom racine du fichier
+            alfa (int) : Numéro de l'alphabet de cryptage choisi
+            K (int) : Coordonnée x de la clé partagée ECDHE
         
         Renvoie:
-            Kp (tuple) : Clé publique
+            Kp (dict) : Clé publique
+            Km (dict) : Clé privée
         """
-        nom_fichier = os.path.splitext(os.path.basename(__file__))[0]
         self.__fichier_kp = f"{nom_fichier}_cle_publique.pem"
         self.__fichier_km = f"{nom_fichier}_cle_privee.pem"
         # Chargement de la clé publique
         with open(self.__fichier_kp, "rb") as f:
-            Kp = f.read()
+            self.__Kp = f.read()
         # Chargement de la clé privée
         with open(self.__fichier_km, "rb") as g:
-            Km = g.read()
-        return Kp, Km
-
-
-class ECDHE:
-    """
-    Classe du chiffrement ECDHE (Diffie Hellman Ephémère à Courbe Elliptique) sur la courbe Scep256r1
-         
-    Méthodes:
-        cle_privee() : Calcul de la clé privée
-        cle_publique() : Calcul de la clé publique
-        cle_partagee() : Calcul de la clé partagée
-        signer(message) : Signe un message
-        flux_sha512() : Génère un flux pseudo-aléatoire
-        chiffrer(message) : Chiffre / déchiffre un message
-    """
-    def __init__(self):
-        self.__Gx = secp.Gx
-        self.__Gy = secp.Gy
-    
-    @property
-    def G(self) -> list:
-        """Renvoie le point générateur G"""
-        self.__G = [hex(self.__Gx), hex(self.__Gy)]
-        return self.__G
-    
-    @property
-    def Km(self) -> int:
-        """Renvoie ma clé privée"""
-        return self.__Km
-    
-    @property
-    def Kp(self) -> tuple:
-        """Renvoie la clé publique"""
-        return self.__Kp
-    
-    @property
-    def K(self) -> tuple:
-        """Renvoie la clé partagée"""
-        return self.__K
-    
-    def cle_privee(self) -> int:
-        """
-        Calcul de la clé privée
+            self.__Km = g.read()
+        # Conversion bytes vers hexa
+        self.__Kp = [x for x in self.__Kp.decode('latin-1').replace("\r", "").split("\n") if x]
+        Km_sec = [bloc.encode('latin-1') for bloc in self.__Km.decode('latin-1').split("ZOUZOUZOUBISOU") if bloc]
+        self.__Km = [hex(A64().z64_inverse(ECDHE().chiffrer(item, K), alfa)) for item in Km_sec]
         
-        Renvoie:
-            Km (int) : Clé privée
-        """
-        self.__Km = rds.randint(1, secp.n-1)
-        return self.__Km
-    
-    def cle_publique(self) -> tuple:
-        """
-        Calcul de la clé publique
-        
-        Renvoie:
-            Kp (tuple) : Clé publique
-        """
-        self.__Kp = secp.montgomery_ladder(self.__Km, self.__Gx, self.__Gy)
-        return self.__Kp
-    
-    def cle_partagee(self, Kp1: list) -> tuple:
-        """
-        Calcul de la clé partagée
-        
-        Attribut:
-            Kp1 (tuple) : Clé partagée de l'interlocuteur
-        """
-        self.__K = secp.montgomery_ladder(self.__Km, Kp1[0], Kp1[1])
-        return self.__K
-    
-    def signer(self, message: bytes) -> hex:
-        """
-        Signe un message
-        
-        Attribut:
-            message (bytes) : Message à chiffrer ou déchiffrer
-            
-        Renvoie:
-            signe (hex) : Message signé
-        """
-        Kx = self.__K[0]
-        key = Kx.to_bytes((Kx.bit_length() + 7) // 8, byteorder='big')
-        bloc = 128
-        
-        # Étape 1 : Ajuster la clé
-        if len(key) > bloc:
-            key = rd._sha512(key).digest()  # hacher si trop long
-        if len(key) < bloc:
-            key = key.ljust(bloc, b'\x00')  # compléter avec des zéros
-        
-        # Étape 2 : Créer ipad et opad
-        ipad = bytes((x ^ 0x36) for x in key)
-        opad = bytes((x ^ 0x5c) for x in key)
-    
-        # Étape 3 : Calcul HMAC
-        inner_hash = rd._sha512(ipad + message).digest()
-        hmac_result = rd._sha512(opad + inner_hash).hexdigest()
-        return hmac_result
-
-    def chiffrer(self, message):
-        """
-        Chiffre un message
-        
-        Attribut:
-            message (bytes/str) : message à chiffrer (str) ou à déchiffrer (bytes)
-        
-        Renvoie:
-            chiffre (bytes/str) : message chiffré (bytes) ou déchiffré (str)
-        """
-        # Caractéristiques du message
-        drapeau = 0
-        if isinstance(message, str):
-            message = message.encode("utf-8")
-            drapeau = 1
-        elif isinstance(message, bytes):
-            message = message
-            drapeau = 2
-        else:
-            raise ValueError("Le format n'est pas correcte, veuillez renseigner un str ou un bytes.")
-        cleX = self.__K[0]
-        nombre = (cleX.bit_length() + 7) // 8
-        cle = cleX.to_bytes(nombre, byteorder='big')    
-        longueur = len(message)
-        # Balance XOR
-        flux = b""
-        compteur = 0
-        while len(flux) < longueur:
-            # Concatène la clé avec un compteur pour produire des blocs uniques
-            block = rd._sha512(cle + compteur.to_bytes(8, 'big')).digest()
-            flux += block
-            compteur += 1
-        # Chiffré
-        chiffre = flux[:longueur]     
-        #resultat = bytes([m ^ k for m, k in zip(message, chiffre)])
-        
-        if drapeau == 1:
-            resultat = bytes([m ^ k for m, k in zip(message, chiffre)])
-        elif drapeau == 2:
-            resultat = bytes([m ^ k for m, k in zip(message, chiffre)]).decode("utf-8")
-        
-        return resultat
+        return self.__cle_publique, self.__cle_privee
 
 
 print("Merci d'utiliser ROTATOR")
 
 if __name__ == "__main__":
     print("Tests de fonctionnement")
-    kp = rd.randint(0, x25519-1)
-    k = DH(x25519,999,kp)
-    # Le module os est intégré dans random
-    os.path.exists('rotator.py')
-    h = RSA()
     
     
-    # Génère des clés de 3 x 683 hex = 2049 bits
-    if not os.path.exists(f"{os.path.splitext(os.path.basename(__file__))[0]}_cle_publique.pem"):
-        h.cles(683)
-        h.sauvegarde_cles()
-    
-
-    ma_cle_publique, ma_cle_privee = h.chargement_cles()
-    
-    Kp = [x for x in ma_cle_publique.decode().replace("\r", "").split("\n") if x]
-    Km = [x for x in ma_cle_publique.decode().replace("\r", "").split("\n") if x]
-    
-    """
-    h.Km = Km
-    h.Kp = Kp
-    """
-    
-    
+    # Classes de test
     a = A64()
-    
-    liste_alfa = rd.sample(range(64), 64)
-    
-    
-    
-   # Appuyer sur ctrl + T
+    h = RSA()
+    h.cles(512) # longueur clé env = 512 * 4 = 2048 bits
     
     
-
-
-
-
-
-
-
+    
 
 
 
