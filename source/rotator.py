@@ -604,7 +604,7 @@ class RSA:
         print(f"Des clés RSA de taille {longueur} bits ont été générées")
         return self.__cle_privee, self.__cle_publique
     
-    def chiffrer(self, message: str = None, Kp1: dict = None) -> hex:
+    def chiffrer(self, message: str = None, Kp1: dict = None) -> list:
         """
         Chiffre un message, en utilisant la clé publique d'un autre
         
@@ -632,13 +632,23 @@ class RSA:
         e1 = int(Kp1["e"], 16)
         # Transformation du message en entier
         message_entier = int.from_bytes(message.encode("utf-8"), byteorder='big')
+        # Calcul si le message est trop grand
         if message_entier >= n1:
-            raise ValueError(f"Le message est trop grand pour ce module RSA. Message = {hex(message_entier)} > {hex(n1)}")
-        # Calcul du message chiffré
-        chiffre = hex(pow(message_entier, e1, n1))
-        return chiffre
+            message_entier_str = str(message_entier)
+            message_bloc = []
+            chiffre_bloc = []
+            taille_bloc = (len(str(n1))-10)
+            for i in range(0, len(message_entier_str), taille_bloc):
+                bloc = message_entier_str[i:i + taille_bloc]
+                message_bloc.append(int(bloc))
+                chiffre = hex(pow(int(bloc), e1, n1))
+                chiffre_bloc.append(chiffre)
+        # Calcul si le message est de bonne longueur
+        else:
+            chiffre_bloc = [hex(pow(message_entier, e1, n1))]
+        return chiffre_bloc
 
-    def dechiffrer(self, message_a_dechiffrer: hex = None) -> str:
+    def dechiffrer(self, message_a_dechiffrer: list = None) -> str:
         """
         Déchiffre un message, en utilisant ma clé privée
         
@@ -651,21 +661,21 @@ class RSA:
         # Caractéristiques du message à déchiffrer
         if message_a_dechiffrer == None:
             raise ValueError("Veuilez renseigner un message à déchiffrer.")
-        elif isinstance(message_a_dechiffrer, int):
-            message_a_dechiffrer_entier = message_a_dechiffrer
-        elif isinstance(message_a_dechiffrer, hex):
-            message_a_dechiffrer_entier = int(message_a_dechiffrer, 16)
-        elif not isinstance(message_a_dechiffrer, hex):
-            raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'hex'.")
+        elif not isinstance(message_a_dechiffrer, list):
+            raise ValueError("Le format n'est pas correcte, veuilez renseigner au format 'list'.")
         # Caractéristiques de ma clé publique
         d0 = int(self.__cle_privee["d"], 16)
         n0 = int(self.__cle_privee["p"], 16) * int(self.__cle_privee["q"], 16)
         # Déchiffrage
-        dechiffre_entier = pow(message_a_dechiffrer_entier, d0, n0)
-        nombre_bits = len(bin(dechiffre_entier)) - 2
+        dechiffre = ""
+        for ligne in message_a_dechiffrer:
+            dechiffre_ligne = pow(int(ligne, 16), d0, n0)
+            dechiffre += str(dechiffre_ligne)
+        nombre_bits = len(bin(int(dechiffre))) - 2
         nombre_octets = (nombre_bits + 7) // 8 # +7 pour arrondir au supérieur
-        dechiffre = dechiffre_entier.to_bytes(nombre_octet, 'big').decode("utf-8")
-        return dechiffre
+        dechiffre = int(dechiffre)
+        message = dechiffre.to_bytes(nombre_octets, 'big').decode("utf-8")
+        return message
     
     def hacher2(self, message: str = None, sel: bytes = None) -> dict:
         """
