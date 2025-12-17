@@ -42,10 +42,6 @@ def ip():
 class A64:
     """
     Classe de l'alphabet 64
-    
-    Attributs:
-        numero_alphabet (int) : Numéro de l'alphabet
-        nombre (int) : Nombre à coder
         
     Méthodes:
         alfa() : Choix de l'alphabet
@@ -53,9 +49,7 @@ class A64:
         z64() : Conversion d'un entier vers base 64 0z
         z64_inverse() : Conversion d'un base 64 0z vers un entier
     """
-    def __init__(self, numero_alphabet: int = 2) -> None:
-        self.__x = numero_alphabet
-
+    
     def alfa(self, numero_alphabet: int = None) -> str:
         """
         Renvoie un alphabet choisi
@@ -91,6 +85,7 @@ class A64:
             raise ValueError("L'alphabet n'existe pas.")
         return alfa
     
+    
     def binalfa(self, numero_alphabet: int = None) -> dict:
         """
         Conversion de l'alphabet choisi vers un dictionnaire avec le caractère associé à une valeur binaire sur 6 bits
@@ -109,6 +104,7 @@ class A64:
         else:
             raise ValueError("L'alphabet n'existe pas.")
         return binalfa
+    
     
     def z64(self, nombre: int = None, numero_alphabet: int = None) -> str:
         """
@@ -140,6 +136,7 @@ class A64:
             nombre, reste = divmod(nombre, 64)
             symbol.append(self.alfa(numero_alphabet)[reste])
         return "0z" + "".join(reversed(symbol))
+    
     
     def z64_inverse(self, nombre_0z: str, alfabet: int = 2) -> int:
         """
@@ -759,7 +756,7 @@ class RSA:
             print("La signature n'est pas bonne")
             return False
 
-    def sauvegarde_cles(self, nom_fichier: str, alfa: int, K: int) -> None:
+    def sauvegarde_cles(self, nom_fichier: str, alfa: int, cle: int) -> None:
         """
         Sauvergarde les clés RSA dans un fichier .pem
         
@@ -775,40 +772,50 @@ class RSA:
         print(f"Le fichier {self.__fichier_km} a été crée.")
         # Enregistrement de la clé publique
         with open(self.__fichier_kp, "w") as f:
-            for item in self.__Kp:
-                f.write(f"{item}\n")       
+            for nom, parametre in self.__cle_publique.items():
+                f.write(f"{parametre}\n")       
         # Enregistrement de la clé privée
         with open(self.__fichier_km, "wb") as g:
-            for item in self.__Km:
-                g.write(ECDHE().chiffrer(A64().z64(int(item, 16), alfa), K) + b"ZOUZOUZOUBISOU")
+            for nom in ["p", "q", "d"]:
+                parametre_int = int(self.__cle_privee[nom], 16)
+                param_bytes = parametre_int.to_bytes((parametre_int.bit_length() + 7) // 8, "big")
+                cle_bytes = (str(cle).encode("utf-8") * ((len(param_bytes) // len(str(cle).encode("utf-8"))) + 1))[:len(param_bytes)]
+                param_chiffre_bytes = bytes(a ^ b for a, b in zip(param_bytes, cle_bytes))
+                g.write(bytes(A64().z64(int.from_bytes(param_chiffre_bytes, "big"), alfa), "utf-8") + b"ZOUZOUZOUBISOU")
         print("Enregistrement des clés effectué avec succès.")
         
-    def chargement_cles(self, nom_fichier: str, alfa: int, K: int) -> dict:
+    def chargement_cles(self, nom_fichier: str, alfa: int, cle: int) -> dict:
         """
         Charge les clés RSA
         
-        Arguments:
+        Arguments :
             nom_fichier (str) : Nom racine du fichier
             alfa (int) : Numéro de l'alphabet de cryptage choisi
-            K (int) : Coordonnée x de la clé partagée ECDHE
+            cle (int) : Coordonnée x de la clé partagée ECDHE
         
-        Renvoie:
-            Kp (dict) : Clé publique
-            Km (dict) : Clé privée
+        Renvoie :
+            Kp (dict), Km (dict) : Clé publique, clé privée
         """
         self.__fichier_kp = f"{nom_fichier}_cle_publique.pem"
         self.__fichier_km = f"{nom_fichier}_cle_privee.pem"
         # Chargement de la clé publique
         with open(self.__fichier_kp, "rb") as f:
-            self.__Kp = f.read()
+            self.__cle_publique = f.read()
         # Chargement de la clé privée
         with open(self.__fichier_km, "rb") as g:
-            self.__Km = g.read()
-        # Conversion bytes vers hexa
-        self.__Kp = [x for x in self.__Kp.decode('latin-1').replace("\r", "").split("\n") if x]
-        Km_sec = [bloc.encode('latin-1') for bloc in self.__Km.decode('latin-1').split("ZOUZOUZOUBISOU") if bloc]
-        self.__Km = [hex(A64().z64_inverse(ECDHE().chiffrer(item, K), alfa)) for item in Km_sec]
-        
+            self.__cle_privee = g.read()
+        # Décodage clé publique
+        cle_publique_sec = [x for x in self.__cle_publique.decode('utf-8').replace("\r", "").split("\n") if x]
+        self.__cle_publique = dict(zip(["n", "e"], cle_publique_sec))
+        # Décodage clé privée
+        cle_privee_sec = [bloc for bloc in self.__cle_privee.decode('utf-8').split("ZOUZOUZOUBISOU") if bloc]
+        self.__cle_privee = {}
+        for nom, bloc in zip(["p", "q", "d"], cle_privee_sec):
+            param_chiffre_int = A64().z64_inverse(bloc, alfa)
+            param_chiffre_bytes = param_chiffre_int.to_bytes((param_chiffre_int.bit_length() + 7) // 8, "big")
+            cle_bytes = (str(cle).encode("utf-8") * ((len(param_chiffre_bytes) // len(str(cle).encode("utf-8"))) + 1))[:len(param_chiffre_bytes)]
+            param_bytes = bytes(a ^ b for a, b in zip(param_chiffre_bytes, cle_bytes))
+            self.__cle_privee[nom] = hex(int.from_bytes(param_bytes, "big"))
         return self.__cle_publique, self.__cle_privee
 
 
