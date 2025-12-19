@@ -6,6 +6,7 @@ Plus d'informations sur https://github.com/theofefe22/sae302
 2025 - Altech Industries - Tous droits réservés
 
 """
+
 # BIBLIOTHEQUES IMPORTEES
 import socket
 import random as rd
@@ -25,16 +26,12 @@ os = rd._os
 
 
 # FONCTIONS COMMUNES
-def nom():
-    """
-    Renvoie le nom de la machine
-    """
+def nom() -> str:
+    """Renvoie le nom de la machine"""
     return socket.gethostname()
 
-def ip():
-    """
-    Renvoie l'adresse IPv4 de la machine
-    """
+def ip() -> str:
+    """Renvoie l'adresse IPv4 de la machine"""
     return socket.gethostbyname(socket.gethostname())
 
 
@@ -43,7 +40,7 @@ class A64:
     """
     Classe de l'alphabet 64
         
-    Méthodes:
+    Méthodes :
         alfa() : Choix de l'alphabet
         binalfa() : Conversion de l'alphabet sur 6 bits
         z64() : Conversion d'un entier vers base 64 0z
@@ -54,8 +51,11 @@ class A64:
         """
         Renvoie un alphabet choisi
         
-        Attribut :
+        Argument :
             numero_alphabet (int) : Numéro de l'alphabet choisi
+           
+        Renvoie :
+            alfa (str) : Chaîne de caractères de l'alphabet choisi
         """
         # Caractéristique numéro alphabet
         if numero_alphabet == None:
@@ -85,15 +85,14 @@ class A64:
             raise ValueError("L'alphabet n'existe pas.")
         return alfa
     
-    
     def binalfa(self, numero_alphabet: int = None) -> dict:
         """
         Conversion de l'alphabet choisi vers un dictionnaire avec le caractère associé à une valeur binaire sur 6 bits
         
-        Arguments:
+        Argument :
             numero_alphabet (int) : Numéro de l'alphabet choisi
         
-        Renvoie:
+        Renvoie :
             binalfa (dict) : Dictionnaire de l'alphabet utilisé
         """
         # Caractéristiques numéro alphabet
@@ -105,16 +104,15 @@ class A64:
             raise ValueError("L'alphabet n'existe pas.")
         return binalfa
     
-    
     def z64(self, nombre: int = None, numero_alphabet: int = None) -> str:
         """
         Conversion d'entier vers z64
         
-        Arguments:
+        Arguments :
             nombre (int) : Nombre à convertir
             numero_alphabet (int) : Numéro de l'alphabet à utiliser
         
-        Renvoie:
+        Renvoie :
             nombre_convertit (str) : Nombre convertit base 64, avec préfixe 0z
         """
         # Caractéristiques du nombre
@@ -137,16 +135,15 @@ class A64:
             symbol.append(self.alfa(numero_alphabet)[reste])
         return "0z" + "".join(reversed(symbol))
     
-    
     def z64_inverse(self, nombre_0z: str, alfabet: int = 2) -> int:
         """
         Conversion de z64 en entier
         
-        Arguments:
+        Arguments :
             nombre (str) : Nombre base 0z à convertir
             alfabet (int) : Numéro de l'alphabet à utiliser
         
-        Renvoie:
+        Renvoie :
             nombre (int) : Entier déconvertit
         """
         # Caractéristiques nombre_0z
@@ -171,13 +168,13 @@ class BDD:
     """
     Classe de la base de données (BDD)
     
-    Attributs:
+    Arguments :
         adresse (str) : Adresse IP du serveur
         port (int) : Port de connexion au serveur
         
-    Méthodes:
-        insert() : Insertion de données
-        recupert(message) : Récuperation de données
+    Méthodes :
+        inserer(table, ip, port, kp) : Insertion de données
+        recuperer(table) : Récuperation de données
         fermer() : Fermeture de la connexion à la base de données
     """
     def __init__(self, hote, utilisateur, mdp, base):
@@ -190,8 +187,7 @@ class BDD:
             print(f"Base '{self.__base}' créée ou déjà existante.")
         except mysql.connector.Error as err:
             print("Erreur création base:", err)
-
-        # Se connecter à la base créée
+        # Se connecter à la BDD créée
         self.cursor.execute(f"USE {self.__base}")
 
     @property
@@ -203,7 +199,7 @@ class BDD:
         """
         Insertion de données
         
-        Arguments:
+        Arguments :
             table (str) : Table à utiliser
             ip (str) : IP à insérer
             port (int) : Port à insérer
@@ -219,10 +215,13 @@ class BDD:
         
     def recuperer(self, table: str) -> list:
         """
-        Récuperation de données
+        Récuperation de données d'une table
         
-        Arguments:
+        Arguments :
             table (str) : Table à utiliser
+        
+        Renvoie :
+            liste (list) : Eléments de la table
         """
         sql = f"SELECT * FROM {table}"
         self.cursor.execute(sql)
@@ -230,9 +229,7 @@ class BDD:
         return liste
     
     def fermer(self) -> None:
-        """
-        Fermeture de la connexion à la base de données
-        """
+        """Fermeture de la connexion à la base de données"""
         self.cursor.close()
         self.__bdd.close()
 
@@ -241,11 +238,11 @@ class Client:
     """
     Classe du connecteur client
     
-    Attributs:
+    Arguments :
         adresse (str) : Adresse IP du serveur
         port (int) : Port de connexion au serveur
         
-    Méthodes:
+    Méthodes :
         connexion() : Connexion au serveur
         enoie(message) : Envoie d'un message au serveur
         recption() : Message reçu du serveur
@@ -287,7 +284,7 @@ class Client:
         """
         Connexion au serveur
         
-        Arguments:
+        Arguments :
             adresse (str) : Adresse IP du serveur
             port (int) : Port de connexion au serveur
         """
@@ -302,7 +299,7 @@ class Client:
         """
         Envoie un message
         
-        Argument:
+        Argument :
             message : Message à envoyer
         """
         
@@ -369,11 +366,11 @@ class Serveur:
     """
     Classe du connecteur serveur
     
-    Attributs:
+    Arguments :
         adresse (str) : Adresse IP du serveur
         port (int) : Port d'écoute
         
-    Méthodes:
+    Méthodes :
         ecoute() : Ecoute les clients
         message_client() : Affiche le message reçu
     """
@@ -457,12 +454,12 @@ class Maths:
         """
         Renvoie un tuple (d, u, v) tel que d = gcd(a, b) et au + bv = d
         
-        Attributs :
+        Arguments :
             a (int) : Paramètre a
             b (int) : Paramètre b
         
         Renvoie :
-            d, u, v (tuple) : Les paramètres d, u et v
+            d, u, v (tuple) : Paramètres d, u et v
         """
         if b == 0:
             return (a, 1, 0)
@@ -477,7 +474,7 @@ class Maths:
         """
         Génère un nombre premier ayant n (nombre_bits) bits
         
-        Attribut :
+        Argument :
             nombre_bits (int) : Longueur en bits du nombre généré
             
         Renvoie :
@@ -494,7 +491,7 @@ class Maths:
         """
         Calcul le plus grand commun diviseur (PGCD)
         
-        Attributs :
+        Arguments :
             a (int) : Coefficient a
             b (int) : Coefficient b
         
@@ -510,7 +507,7 @@ class Maths:
         """
         Calcul si deux nombres sont premiers entre eux
         
-        Attributs :
+        Arguments :
             a (int) : Coefficient a
             b (int) : Coefficient b
         
@@ -523,12 +520,14 @@ class Maths:
 
 class RSA:
     """
-    Classe des clés de RSA
+    Classe du chiffrement RSA
         
     Méthodes :
         cles() : Calcul les clés RSA
         chiff() : Chiffre un message, avec la clé publique du receveur
         dechiff() : Déchiffre un message
+        torage(message) :
+        detorage() :
         
     Renvoie :
         Kp0 (int) : Clé publique à transmettre
@@ -563,7 +562,7 @@ class RSA:
         """
         Renvoie les clés partagée et privée RSA
         
-        Attribut :
+        Argument :
             nombre_bits (int) : Nombre de symboles hexadécimales de la clé RSA (1 symbole hexa = 4 bits)
         
         Renvoie :
@@ -608,7 +607,7 @@ class RSA:
         """
         Chiffre un message, en utilisant la clé publique d'un autre
         
-        Attributs :
+        Arguments :
             message (str) : Message à déchiffrer
             Kp1 (dict) : Clé publique de l'autre
         
@@ -631,29 +630,23 @@ class RSA:
         n1 = int(Kp1["n"], 16)
         e1 = int(Kp1["e"], 16)
         # Transformation du message en entier
-        message_entier = int.from_bytes(message.encode("utf-8"), byteorder='big')
-        # Calcul si le message est trop grand
-        if message_entier >= n1:
-            message_entier_str = str(message_entier)
-            message_bloc = []
-            chiffre_bloc = []
-            taille_bloc = (len(str(n1))-10)
-            for i in range(0, len(message_entier_str), taille_bloc):
-                bloc = message_entier_str[i:i + taille_bloc]
-                message_bloc.append(int(bloc))
-                chiffre = hex(pow(int(bloc), e1, n1))
-                chiffre_bloc.append(chiffre)
-        # Calcul si le message est de bonne longueur
-        else:
-            chiffre_bloc = [hex(pow(message_entier, e1, n1))]
+        message_bytes = message.encode("utf-8")
+        # Déchiffrement du message
+        chiffre_bloc = []
+        taille_bloc = (n1.bit_length() - 1) // 8
+        for i in range(0, len(message_bytes), taille_bloc):
+            bloc = message_bytes[i:i + taille_bloc]
+            bloc_int = int.from_bytes(bloc, byteorder='big')
+            chiffre = hex(pow(bloc_int, e1, n1))
+            chiffre_bloc.append(chiffre)
         return chiffre_bloc
 
     def dechiffrer(self, message_a_dechiffrer: list = None) -> str:
         """
         Déchiffre un message, en utilisant ma clé privée
         
-        Attribut :
-            message_a_dechiffrer (hex) : Message à déchiffrer
+        Argument :
+            message_a_dechiffrer (list) : Message à déchiffrer
         
         Renvoie :
             dechiffre (str) : Message déchiffré
@@ -667,21 +660,19 @@ class RSA:
         d0 = int(self.__cle_privee["d"], 16)
         n0 = int(self.__cle_privee["p"], 16) * int(self.__cle_privee["q"], 16)
         # Déchiffrage
-        dechiffre = ""
-        for ligne in message_a_dechiffrer:
-            dechiffre_ligne = pow(int(ligne, 16), d0, n0)
-            dechiffre += str(dechiffre_ligne)
-        nombre_bits = len(bin(int(dechiffre))) - 2
-        nombre_octets = (nombre_bits + 7) // 8 # +7 pour arrondir au supérieur
-        dechiffre = int(dechiffre)
-        message = dechiffre.to_bytes(nombre_octets, 'big').decode("utf-8")
+        message_bytes = b""
+        for bloc_chiffre in message_a_dechiffrer:
+            bloc_int = pow(int(bloc_chiffre, 16), d0, n0)
+            nb_octets = (bloc_int.bit_length() + 7) // 8
+            message_bytes += bloc_int.to_bytes(nb_octets, byteorder='big')
+        message = message_bytes.decode("utf-8")
         return message
     
     def hacher2(self, message: str = None, sel: bytes = None) -> dict:
         """
         Hache un message en utilisant SHA512
         
-        Attributs :
+        Arguments :
             message (str) : Message à hacher
             sel (bytes) : Sel du haché
         
@@ -704,8 +695,11 @@ class RSA:
         """
         Signe un message
         
-        Arguments:
+        Arguments :
             message_a_signer (str) : Message à signer
+        
+        Renvoie :
+            message_a_signer, hex(signe), sel (list) : Le message à signer, le message signé et le sel
         """
         # Caractéristiques du message à signer
         if isinstance(message_a_signer, list):
@@ -721,21 +715,21 @@ class RSA:
             sel = hache[1]
             hache = int.from_bytes(hache[0],"big")
         except:
-            hache = self.hacher1(message_a_signer)
-            print("La haché a été obtenu à partir d'une fonction de hachage secondaire.")
-            hache = int(hache,16)
-            sel = 0
+            return("Le haché n'a pas pu être obtenu.")
         # Cryptage du haché
         signe = pow(hache, d0, n0)
-        return [message_a_signer, hex(signe), sel]
+        return {"message": message_a_signer, "signe": hex(signe), "sel": sel}
     
     def verifier(self, message_signe: str, methode_hache: int = 2, Kp1: dict = None) -> bool:
         """
         Vérifie la signature d'un message
         
-        Arguments:
+        Arguments :
             message_signe (str) : Message à signer
             Kp1 (dict) : La clé publique de l'autre
+        
+        Renvoie :
+            (bool) : Vrai si l'authentification est bonne, Faux sinon
         """
         # Caractéristiques clé publique de l'autre
         if Kp1 == None:
@@ -765,12 +759,55 @@ class RSA:
         else:
             print("La signature n'est pas bonne")
             return False
+    
+    def torage(self, message: str, liste_routeurs: tuple) -> list:
+        """
+        Mise en oignon d'un message
+        
+        Arguments :
+            message (str) : Message à chiffrer
+            liste_routeurs (tuple) : Liste des routeurs par lesquels le message va passer
+        
+        Renvoie :
+            chiffre (list) : L'oignon chiffré
+        """
+        # Caractéristiques de la liste des routeurs
+        passage = tuple(reversed(passage))
+        # Obtention des clés
+        
+        # Premier chiffrage pour destinataire final
+        chiffre = rsa.chiffrer(message, cle_public_autre)
+        # Chiffrage
+        for i in range(0, len(liste_routeurs) - 1):
+            message = self.chiffrer((liste_routeurs[i] + str(message)), cle_public_autre)
+        chhiffre = (liste_routeurs[-1] + str(message))
+        return message
+
+    def detorage(self, message_chiffre: list):
+        """
+        Décompactage du message chiffré
+        
+        Argument :
+            message_chiffre (list) : Message chiffré reçu
+        
+        Renvoie :
+            message_a_envoyer
+        """
+        # Déchiffrage
+        dechiffre = self.dechiffrer(message_chiffre)
+        # Identification du destinataire
+        i = dechiffre.find('[')
+        destinataire = dechiffre[:i]
+        # Calcul du message à envoyer
+        u = dechiffre[i:]
+        message_a_envoyer = [x.strip().strip("'") for x in u[1:-1].split(",")]
+        return destinataire, message_a_envoyer
 
     def sauvegarde_cles(self, nom_fichier: str, alfa: int, cle: int) -> None:
         """
         Sauvergarde les clés RSA dans un fichier .pem
         
-        Arguments:
+        Arguments :
             nom_fichier (str) : Nom racine du fichier
             alfa (int) : Numéro de l'alphabet de cryptage choisi
             K (int) : Coordonnée x de la clé partagée ECDHE
@@ -829,13 +866,15 @@ class RSA:
         return self.__cle_publique, self.__cle_privee
 
 
+# CREDITS
 print("Merci d'utiliser ROTATOR")
 
+
+# BOUCLE DE TESTS
 if __name__ == "__main__":
     print("Tests de fonctionnement")
     
-    
-    # Classes de test
+    # Classes des tests
     a = A64()
     h = RSA()
     h.cles(512) # longueur clé env = 512 * 4 = 2048 bits
