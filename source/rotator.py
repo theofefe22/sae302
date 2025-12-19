@@ -760,7 +760,7 @@ class RSA:
             print("La signature n'est pas bonne")
             return False
     
-    def torage(self, message: str, liste_routeurs: tuple) -> list:
+    def torage(self, message: str, passage_norm: tuple, liste_routeurs: tuple) -> list:
         """
         Mise en oignon d'un message
         
@@ -771,19 +771,30 @@ class RSA:
         Renvoie :
             chiffre (list) : L'oignon chiffré
         """
-        # Caractéristiques de la liste des routeurs
-        passage = tuple(reversed(passage))
-        # Obtention des clés
+        #cles_publiques = [cle_public_r1, cle_public_r2]
+        #cle_public_r2 = {'nom' : 'Routeur 2', 'n': '0x5d24dc9b28a8cb3af3ff79147ae18bedb25a6398f9027a9f537cf19b6c409556eaf9c6cceb262b6c4704d50536829bbbdf820b8eeb7861929b242baba6e75f9f73c7593151995800feef75e2c451de1af3d23fc5416000de68ed3f2922b71d43123cf7ae08338458fc8aef0d55c090f5f21eddc432677a692d057033bc92e1e170e688be39b6a3e6eaf5b64dbad1e9620dfa05400356722c5ac403895919c2a13aac599fa56b4362a92a953725fec8895c5bb3928aac2470db6bf94cceb52281b2c9a9a4d26c075f70fe6a120c932ddd17111d6141b7ba2663b55b1e60b7195777a1a54dc0f17f00b7e2e6fb1ade01cd3b7d98d08840e51a3985d39f6fbace6d', 'e': '0x1fd4b656fe65d679b4bd168d7ad11bcfaf9f126af9c65eb1f8a99752a1c5629199cb709e32c3ad397835122e83667f50c56cfd252fa8cc5bba37b3fc323cd24eef256605c7ca88666238e617ec5eb80cbf62ffd7245da2d2200044c015d977c3b960a622793f61810dc46f631aebba4166ab6af'}
         
+        # Caractéristiques de la liste des routeurs
+        passage = tuple(reversed(passage_norm))
+        # Mise en ordre des clés
+        cles_publiques_reordonnees = []
+        for routeur in passage_norm:
+            for cle in liste_routeurs:
+                if cle['nom'] == routeur:
+                    cles_publiques_reordonnees.append(cle)
+                    break
         # Premier chiffrage pour destinataire final
-        chiffre = rsa.chiffrer(message, cle_public_autre)
+        chiffre = self.chiffrer(message, cles_publiques_reordonnees[-1])
         # Chiffrage
-        for i in range(0, len(liste_routeurs) - 1):
-            message = self.chiffrer((liste_routeurs[i] + str(message)), cle_public_autre)
-        chhiffre = (liste_routeurs[-1] + str(message))
-        return message
+        n = 0
+        for i in range(len(passage_norm) - 2, -1, -1):
+            chiffre = passage[n] + str(chiffre)
+            n += 1
+            print(i)
+            chiffre = self.chiffrer(chiffre, cles_publiques_reordonnees[i])
+        return chiffre
 
-    def detorage(self, message_chiffre: list):
+    def detorage(self, message_chiffre: list) -> str:
         """
         Décompactage du message chiffré
         
@@ -791,7 +802,7 @@ class RSA:
             message_chiffre (list) : Message chiffré reçu
         
         Renvoie :
-            message_a_envoyer
+            destinataire (str), message_a_envoyer (list/str) : Destinataire du message, Message à renvoyer
         """
         # Déchiffrage
         dechiffre = self.dechiffrer(message_chiffre)
@@ -801,6 +812,10 @@ class RSA:
         # Calcul du message à envoyer
         u = dechiffre[i:]
         message_a_envoyer = [x.strip().strip("'") for x in u[1:-1].split(",")]
+        # Pour le dernier destinataire
+        if message_a_envoyer == ['']:
+            message_a_envoyer = destinataire
+            destinataire = "Aucun"
         return destinataire, message_a_envoyer
 
     def sauvegarde_cles(self, nom_fichier: str, alfa: int, cle: int) -> None:
