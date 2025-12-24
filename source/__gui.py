@@ -4,6 +4,7 @@ import rotator as rt
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 from PyQt6.QtCore import *
+#from maitre import ouvrir, fermer, recuperation
 
 
 import time
@@ -592,38 +593,35 @@ class Client(QTabWidget):
             reste = elements[:i] + elements[i+1:]
             self.generer_permutations(reste, chemin + [element], resultat)
         return resultat
-    
-    
-    
-    """
-    def maj_liste_appareils(self):
-
-        clients = [c for c in self.cles_publiques if c.get("nom", "").startswith("Client")]
-
-        self.liste_passages.clear()
-        self.liste_passages.addItem("Choisissez un passage")
-    
-        for client in clients:
-            self.liste_passages.addItem(client["nom"])
-
-        self.liste_passages.setEnabled(True)
-    """
 
 
 
 
 class Maitre(QTabWidget):
-    def __init__(self, parent = None):
+    def __init__(self, mon_ip: str, mon_port: int, liste_appareils: dict, ma_cle_publique, ma_cle_privee, parent = None):
         super(Maitre, self).__init__(parent)
+        
+        self.timer = QTimer()
+        #self.timer.timeout.connect(self.maj_bdd)
+        self.timer.start(120_000)
+        
+        self.mon_ip = mon_ip
+        self.mon_port = mon_port
+        self.liste_appareils = liste_appareils
+        self.ma_cle_publique = ma_cle_publique
+        self.__ma_cle_privee = ma_cle_privee
         
         self.onglet1 = QWidget()
         self.onglet2 = QWidget()
+        self.onglet3 = QWidget()
         
         self.addTab(self.onglet1, "Page principale")
         self.addTab(self.onglet2, "Liste des routeurs")
+        self.addTab(self.onglet3, "Liste des clients")
 
         self.creation_onglet1()
         self.creation_onglet2()
+        self.creation_onglet3()
         
         self.setWindowTitle("ROTATOR v1 - Maître")
         self.setWindowIcon(QIcon("logo_rotator.png"))
@@ -631,54 +629,43 @@ class Maitre(QTabWidget):
     def creation_onglet1(self):
         disposition = QFormLayout()
         
-        radio_button = QRadioButton("Option 1")
-        disposition.addRow(radio_button)
-
-        label_routeur = QLabel("Nom :")
-        element_routeur = QLineEdit("Maitre")
-        element_routeur.setReadOnly(True)
-        label_routeur_ip = QLabel("Adresse IP :")
-        element_routeur_ip = QLineEdit(mon_ip)
-        element_routeur_ip.setReadOnly(True)
-        label_routeur_port = QLabel("Port :")
-        element_routeur_port = QLineEdit("16540")
-        label_routeur_kp = QLabel("Clé publique RSA :")
-        element_routeur_kp = QLineEdit("0x46586512323779865386456ffee6348864")
-        element_routeur_kp.setReadOnly(True)
+        titre1 = QLabel("Paramètres primaires :")
+        titre1.setObjectName("h1")
+        titre1.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         
-        bouton_enregistrer = QPushButton("Enregistrer les paramètres")
-        bouton_enregistrer.setMaximumWidth(200)
-        bouton_enregistrer.setStyleSheet("""
-            QPushButton {
-                background-color: #0067C7;
-            }
-            QPushButton:hover {
-                background-color: #00539E;
-            }
-            QPushButton:pressed {
-                background-color: #004582;
-            }
-        """)
+        label_nom = QLabel("Nom :")
+        element_nom = QLineEdit("Maitre")
+        element_nom.setReadOnly(True)
+        
+        label_maitre_ip = QLabel("Adresse IP :")
+        element_maitre_ip = QLineEdit(self.mon_ip)
+        element_maitre_ip.setReadOnly(True)
+        
+        label_maitre_port = QLabel("Port :")
+        element_maitre_port = QLineEdit("16540")
+        element_maitre_port.setReadOnly(True)
+        
+        label_maitre_kp = QLabel("Clé publique RSA :")
+        element_maitre_kp = QPlainTextEdit(str(self.ma_cle_publique))
+        element_maitre_kp.setReadOnly(True)
+        
+        label_maitre_km = QLabel("Clé privée RSA :")
+        element_maitre_km = QPlainTextEdit(str(self.__ma_cle_privee))
+        element_maitre_km.setReadOnly(True)
+        
+        element_maitre_kp.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        element_maitre_km.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         
         bouton_fermer = QPushButton("Fermer")
         bouton_fermer.setMaximumWidth(200)
-        bouton_fermer.setStyleSheet("""
-            QPushButton {
-                background-color: #C90000;
-            }
-            QPushButton:hover {
-                background-color: #A10000;
-            }
-            QPushButton:pressed {
-                background-color: #820000;
-            }
-        """)
+        bouton_fermer.setObjectName("bouton-rouge")
 
-        disposition.addRow(label_routeur, element_routeur)
-        disposition.addRow(label_routeur_ip, element_routeur_ip)
-        disposition.addRow(label_routeur_port, element_routeur_port)
-        disposition.addRow(label_routeur_kp, element_routeur_kp)
-        disposition.addRow(bouton_enregistrer)
+        disposition.addRow(titre1)
+        disposition.addRow(label_nom, element_nom)
+        disposition.addRow(label_maitre_ip, element_maitre_ip)
+        disposition.addRow(label_maitre_port, element_maitre_port)
+        disposition.addRow(label_maitre_kp, element_maitre_kp)
+        disposition.addRow(label_maitre_km, element_maitre_km)
         disposition.addRow(bouton_fermer)
         bouton_fermer.clicked.connect(self.slot_fermer)
 
@@ -686,41 +673,74 @@ class Maitre(QTabWidget):
         disposition.setVerticalSpacing(10)
         
     def creation_onglet2(self):
-        tableau = QTableWidget()
+        tableau_routeurs = QTableWidget()
+        tableau_routeurs.setRowCount(len(self.liste_appareils))
+        tableau_routeurs.setColumnCount(5)
+        tableau_routeurs.setHorizontalHeaderLabels(["Routeur", "Adresse IP", "Port", "Clé publique RSA (n)", "Clé publique RSA (e)"])
         
-        tableau.setRowCount(3)
-        tableau.setColumnCount(4)
-        
-        tableau.setHorizontalHeaderLabels(["Routeur", "Adresse IP", "Port", "Clé publique RSA"])
-        
-        cle = 0xe1a75bbf67ed14e56a43e9d20f57eb01c4d6d0d8d7c7748c3a70c5d61beceefb0297a06cc3f9c60fc9da32774f8b0e1a8ca60284f2cc94d86fe85956623375ad27a3f92b8f7134c93abf5b4e2f0b79a71294c8d3f1e6c2f235f6f35d2e87032747a42fe5c4052de4f1a0fa1be9cd95a0f0c74c65e00a9aef9f2c16969a8f632d00c5159f38d7f35b63277c4ab705211d59fe768b99eaf5a18f34aeac58236b350c3e5b056b46528b7172f71ad82a42593bd4ac0e9fc75a123b9ae6f57b61f3ad56bfe1cd62ecb7785b740c65e98c4f3a2a79f682fd409dd09d376d71bc66fe8b5c7da6367f7b00f54cdbe91
-        
-        data = [
-            ["Routeur 1", "465.15.782.16", "65300", hex(cle)],
-            ["Routeur 2", "465.15.762.97", "65301", "0x17b7fa9"],
-            ["Routeur 5", "465.15.782.13", "65301", "0x17b7fa684346859"]
-        ]
-        
-        for row_idx, row_data in enumerate(data):
-            for colonne, value in enumerate(row_data):
-                if colonne < tableau.columnCount() - 1:
-                    item = QTableWidgetItem(str(value))
-                    tableau.setItem(row_idx, colonne, item)
-                    item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
-                else:
-                    item = QTableWidgetItem((value))
-                    tableau.setItem(row_idx, colonne, item)
+        for ligne, valeurs in enumerate(self.liste_appareils):
+            for colonne, valeur in enumerate(valeurs):
+                item = QTableWidgetItem(valeur)
+                tableau_routeurs.setItem(ligne, colonne, item)
 
-        layout = QGridLayout()
-        layout.addWidget(tableau)
-        self.onglet2.setLayout(layout)
-        
-        tableau.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        tableau.horizontalHeader().setStretchLastSection(True) 
 
+        disposition = QGridLayout()
+        disposition.addWidget(tableau_routeurs)
+        self.onglet2.setLayout(disposition)
+        
+        tableau_routeurs.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        tableau_routeurs.horizontalHeader().setStretchLastSection(True)
+    
+    def creation_onglet3(self):
+        self.tableau_clients = QTableWidget()
+        self.tableau_clients.setRowCount(0)
+        self.tableau_clients.setColumnCount(5)
+        self.tableau_clients.setHorizontalHeaderLabels(["Routeur", "Adresse IP", "Port", "Clé publique RSA (n)", "Clé publique RSA (e)"])
+        
+        disposition = QGridLayout()
+        disposition.addWidget(self.tableau_clients)
+        self.onglet3.setLayout(disposition)
+        
+        self.tableau_clients.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.tableau_clients.horizontalHeader().setStretchLastSection(True)
+    
     def slot_fermer(self):
         print("Fermeture de la fenêtre")
         sys.exit()
+
+    def maj_bdd(self):
+        ouvrir()
+        appareils = recuperation()
+        
+        self.tableau_routeurs.setRowCount(0)
+        self.tableau_clients.setRowCount(0)
+        self.destinataire.clear()
+        
+        for appareil in appareils:
+            self.ajouter_appareil_tableau(appareil)
+
+    def ajouter_routeur_tableau(self, liste_appareils: dict):
+        """
+        Ajoute un routeur dans le tableau.
+        
+        Arguments :
+            liste_appareils : Liste des appareils
+        """        
+        if appareil["nom"].startswith("Routeur"):
+            tableau = self.tableau_routeurs
+        
+        elif appareil["nom"].startswith("Client"):
+            tableau = self.tableau_clients
+        
+        ligne = tableau.rowCount()
+        tableau.insertRow(ligne)
+        
+        tableau.setItem(ligne, 0, QTableWidgetItem(appareil.get("nom", "")))
+        tableau.setItem(ligne, 1, QTableWidgetItem(appareil.get("ip", "")))
+        tableau.setItem(ligne, 2, QTableWidgetItem(str(appareil.get("port", ""))))
+        tableau.setItem(ligne, 3, QTableWidgetItem(appareil.get("n", "")))
+        tableau.setItem(ligne, 4, QTableWidgetItem(appareil.get("e", "")))
+
 
 
 class ClientWorker(QObject):
@@ -797,7 +817,7 @@ class ServeurThread(QThread):
             thread.start()
 """
 
-
+"""
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     app.setStyleSheet(qss)
@@ -833,7 +853,7 @@ if __name__ == "__main__":
     
     # Fermeture application
     sys.exit(app.exec())
-
+"""
 
 
 
