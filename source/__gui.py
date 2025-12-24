@@ -4,17 +4,12 @@ import rotator as rt
 from PyQt6.QtWidgets import *
 from PyQt6.QtGui import *
 from PyQt6.QtCore import *
-#from maitre import ouvrir, fermer, recuperation
-
 
 import time
 import socket
 
-
-
 with open("style.qss", "r") as file:
     qss = file.read()
-
 
 class Progression(QDialog):
     def __init__(self, pourcentage: int = 0, parent = None):
@@ -577,11 +572,6 @@ class Client(QTabWidget):
         for p in permutations:
             self.liste_passages.addItem(p)
 
-            
-            
-            
-            
-    
     def generer_permutations(self, elements, chemin = None, resultat = None):
         if chemin == None:
             chemin = []
@@ -595,15 +585,9 @@ class Client(QTabWidget):
         return resultat
 
 
-
-
 class Maitre(QTabWidget):
     def __init__(self, mon_ip: str, mon_port: int, liste_appareils: dict, ma_cle_publique, ma_cle_privee, parent = None):
         super(Maitre, self).__init__(parent)
-        
-        self.timer = QTimer()
-        #self.timer.timeout.connect(self.maj_bdd)
-        self.timer.start(120_000)
         
         self.mon_ip = mon_ip
         self.mon_port = mon_port
@@ -622,6 +606,11 @@ class Maitre(QTabWidget):
         self.creation_onglet1()
         self.creation_onglet2()
         self.creation_onglet3()
+        
+        self.maj_bdd()
+        self.timer = QTimer()
+        self.timer.timeout.connect(self.maj_bdd)
+        self.timer.start(60_000)
         
         self.setWindowTitle("ROTATOR v1 - Maître")
         self.setWindowIcon(QIcon("logo_rotator.png"))
@@ -642,7 +631,7 @@ class Maitre(QTabWidget):
         element_maitre_ip.setReadOnly(True)
         
         label_maitre_port = QLabel("Port :")
-        element_maitre_port = QLineEdit("16540")
+        element_maitre_port = QLineEdit(str(self.mon_port))
         element_maitre_port.setReadOnly(True)
         
         label_maitre_kp = QLabel("Clé publique RSA :")
@@ -673,23 +662,22 @@ class Maitre(QTabWidget):
         disposition.setVerticalSpacing(10)
         
     def creation_onglet2(self):
-        tableau_routeurs = QTableWidget()
-        tableau_routeurs.setRowCount(len(self.liste_appareils))
-        tableau_routeurs.setColumnCount(5)
-        tableau_routeurs.setHorizontalHeaderLabels(["Routeur", "Adresse IP", "Port", "Clé publique RSA (n)", "Clé publique RSA (e)"])
+        self.tableau_routeurs = QTableWidget()
+        self.tableau_routeurs.setRowCount(len(self.liste_appareils))
+        self.tableau_routeurs.setColumnCount(5)
+        self.tableau_routeurs.setHorizontalHeaderLabels(["Routeur", "Adresse IP", "Port", "Clé publique RSA (n)", "Clé publique RSA (e)"])
         
         for ligne, valeurs in enumerate(self.liste_appareils):
             for colonne, valeur in enumerate(valeurs):
                 item = QTableWidgetItem(valeur)
-                tableau_routeurs.setItem(ligne, colonne, item)
-
+                self.tableau_routeurs.setItem(ligne, colonne, item)
 
         disposition = QGridLayout()
-        disposition.addWidget(tableau_routeurs)
+        disposition.addWidget(self.tableau_routeurs)
         self.onglet2.setLayout(disposition)
         
-        tableau_routeurs.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        tableau_routeurs.horizontalHeader().setStretchLastSection(True)
+        self.tableau_routeurs.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.tableau_routeurs.horizontalHeader().setStretchLastSection(True)
     
     def creation_onglet3(self):
         self.tableau_clients = QTableWidget()
@@ -709,17 +697,19 @@ class Maitre(QTabWidget):
         sys.exit()
 
     def maj_bdd(self):
-        ouvrir()
-        appareils = recuperation()
+        from maitre import ouvrir, fermer, recuperation
+        curseur, connexion_bdd = ouvrir()
+        appareils = recuperation(curseur)
         
         self.tableau_routeurs.setRowCount(0)
         self.tableau_clients.setRowCount(0)
-        self.destinataire.clear()
         
         for appareil in appareils:
             self.ajouter_appareil_tableau(appareil)
+            
+        fermer(curseur, connexion_bdd)
 
-    def ajouter_routeur_tableau(self, liste_appareils: dict):
+    def ajouter_appareil_tableau(self, appareil: dict):
         """
         Ajoute un routeur dans le tableau.
         
@@ -765,14 +755,6 @@ class ClientWorker(QObject):
         
     def liste_appareils(self):
         """Réception et affichage des appareils connecté"""
-        """
-        cle_public_r1 = {'nom' : 'Routeur 1', 'n': '0x5d24dc9b28a8cb3af3ff79147ae18bedb25a6398f9027a9f537cf19b6c409556eaf9c6cceb262b6c4704d50536829bbbdf820b8eeb7861929b242baba6e75f9f73c7593151995800feef75e2c451de1af3d23fc5416000de68ed3f2922b71d43123cf7ae08338458fc8aef0d55c090f5f21eddc432677a692d057033bc92e1e170e688be39b6a3e6eaf5b64dbad1e9620dfa05400356722c5ac403895919c2a13aac599fa56b4362a92a953725fec8895c5bb3928aac2470db6bf94cceb52281b2c9a9a4d26c075f70fe6a120c932ddd17111d6141b7ba2663b55b1e60b7195777a1a54dc0f17f00b7e2e6fb1ade01cd3b7d98d08840e51a3985d39f6fbace6d', 'e': '0x1fd4b656fe65d679b4bd168d7ad11bcfaf9f126af9c65eb1f8a99752a1c5629199cb709e32c3ad397835122e83667f50c56cfd252fa8cc5bba37b3fc323cd24eef256605c7ca88666238e617ec5eb80cbf62ffd7245da2d2200044c015d977c3b960a622793f61810dc46f631aebba4166ab6af'}
-        cle_public_r2 = {'nom' : 'Routeur 2', 'n': '0x5d24dc9b28a8cb3af3ff79147ae18bedb25a6398f9027a9f537cf19b6c409556eaf9c6cceb262b6c4704d50536829bbbdf820b8eeb7861929b242baba6e75f9f73c7593151995800feef75e2c451de1af3d23fc5416000de68ed3f2922b71d43123cf7ae08338458fc8aef0d55c090f5f21eddc432677a692d057033bc92e1e170e688be39b6a3e6eaf5b64dbad1e9620dfa05400356722c5ac403895919c2a13aac599fa56b4362a92a953725fec8895c5bb3928aac2470db6bf94cceb52281b2c9a9a4d26c075f70fe6a120c932ddd17111d6141b7ba2663b55b1e60b7195777a1a54dc0f17f00b7e2e6fb1ade01cd3b7d98d08840e51a3985d39f6fbace6d', 'e': '0x1fd4b656fe65d679b4bd168d7ad11bcfaf9f126af9c65eb1f8a99752a1c5629199cb709e32c3ad397835122e83667f50c56cfd252fa8cc5bba37b3fc323cd24eef256605c7ca88666238e617ec5eb80cbf62ffd7245da2d2200044c015d977c3b960a622793f61810dc46f631aebba4166ab6af'}
-        cle_public_c1 = {'nom' : 'Client A', 'n': '0x5d24dc9b28a8cb3af3ff79147ae18bedb25a6398f9027a9f537cf19b6c409556eaf9c6cceb262b6c4704d50536829bbbdf820b8eeb7861929b242baba6e75f9f73c7593151995800feef75e2c451de1af3d23fc5416000de68ed3f2922b71d43123cf7ae08338458fc8aef0d55c090f5f21eddc432677a692d057033bc92e1e170e688be39b6a3e6eaf5b64dbad1e9620dfa05400356722c5ac403895919c2a13aac599fa56b4362a92a953725fec8895c5bb3928aac2470db6bf94cceb52281b2c9a9a4d26c075f70fe6a120c932ddd17111d6141b7ba2663b55b1e60b7195777a1a54dc0f17f00b7e2e6fb1ade01cd3b7d98d08840e51a3985d39f6fbace6d', 'e': '0x1fd4b656fe65d679b4bd168d7ad11bcfaf9f126af9c65eb1f8a99752a1c5629199cb709e32c3ad397835122e83667f50c56cfd252fa8cc5bba37b3fc323cd24eef256605c7ca88666238e617ec5eb80cbf62ffd7245da2d2200044c015d977c3b960a622793f61810dc46f631aebba4166ab6af'}
-        cle_public_c2 = {'nom' : 'Client B', 'n': '0x5d24dc9b28a8cb3af3ff79147ae18bedb25a6398f9027a9f537cf19b6c409556eaf9c6cceb262b6c4704d50536829bbbdf820b8eeb7861929b242baba6e75f9f73c7593151995800feef75e2c451de1af3d23fc5416000de68ed3f2922b71d43123cf7ae08338458fc8aef0d55c090f5f21eddc432677a692d057033bc92e1e170e688be39b6a3e6eaf5b64dbad1e9620dfa05400356722c5ac403895919c2a13aac599fa56b4362a92a953725fec8895c5bb3928aac2470db6bf94cceb52281b2c9a9a4d26c075f70fe6a120c932ddd17111d6141b7ba2663b55b1e60b7195777a1a54dc0f17f00b7e2e6fb1ade01cd3b7d98d08840e51a3985d39f6fbace6d', 'e': '0x1fd4b656fe65d679b4bd168d7ad11bcfaf9f126af9c65eb1f8a99752a1c5629199cb709e32c3ad397835122e83667f50c56cfd252fa8cc5bba37b3fc323cd24eef256605c7ca88666238e617ec5eb80cbf62ffd7245da2d2200044c015d977c3b960a622793f61810dc46f631aebba4166ab6af'}
-           
-        liste_appareils = [cle_public_r1, cle_public_r2, cle_public_c1, cle_public_c2]
-        """
         
         for appareil in self.appareils:
             self.liste_routeurs.emit(appareil)
