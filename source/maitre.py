@@ -2,6 +2,7 @@
 import rotator as rt
 import __gui as gui
 import mariadb
+from mariadb import IntegrityError
 import socket
 import threading
 import sys
@@ -26,6 +27,27 @@ def gestion_clients(connexion, adresse):
                 break
             buffer += donnees.decode("utf-8")
             
+            print(buffer)
+            
+            while "JEPARS" in buffer:
+                ligne, buffer = buffer.split("JEPARS", 1)
+                ligne = ligne.strip()
+                
+                if ligne == "QUIT":
+                    quittage = True
+                    continue
+                
+                if quittage and ligne != "FIN-TRANS":
+                    nom = ligne              
+                    historique(curseur, f"L'appareil {adresse} de nom {nom} s'est déconnecté.")
+                    curseur.execute("DELETE FROM appareils WHERE nom = ?", (nom,))
+                    curseur.connection.commit()
+                    continue
+                
+                if quittage and ligne == "FIN-TRANS":
+                    quittage = False
+                    continue                
+            
             if "Liste routeurs" in buffer:
                 historique(curseur, f"L'appareil {adresse} a demandé la liste des appareils.")
                 liste_appareils = recuperation(curseur)
@@ -34,14 +56,7 @@ def gestion_clients(connexion, adresse):
                 connexion.sendall("FIN-TRANS".encode("utf-8"))
                 connexion.shutdown(socket.SHUT_WR)
                 buffer = buffer.replace("Liste routeurs", "", 1)
-            
-            if "QUIT" in buffer:
                 
-                historique(curseur, f"L'appareil {adresse} de nom {nom} s'est déconnecté.")
-                curseur.execute("DELETE FROM appareils WHERE nom = ?", (nom,))
-                curseur.connection.commit()
-                continue
-            
             if "Demande initialisation" in buffer:
                 historique(curseur, f"L'appareil {adresse} a demandé à s'initialiser au registre.")
                 connexion.sendall("ACK-INITIALISATION".encode("utf-8"))
@@ -70,12 +85,33 @@ def gestion_clients(connexion, adresse):
                     cle = cle.strip().strip("'").strip('"')
                     valeur = valeur.strip().strip("'").strip('"')
                     attributs[cle] = valeur
-                curseur.execute("SELECT id, nom FROM appareils WHERE n = ? AND e = ?", (attributs['n'], attributs['e']))
+                curseur.execute("SELECT id, nom FROM appareils_historique WHERE n = ? AND e = ?", (attributs['n'], attributs['e']))
                 iport = curseur.fetchone()
-                if iport: # MAJ des clés
+                if iport: # MAJ des attributs
                     nom = iport[1]
-                    curseur.execute("UPDATE appareils SET ip = ?, port = ? WHERE id = ?", (attributs["ip"], attributs["port"], iport[0]))
+                    curseur.execute("UPDATE appareils_historique SET ip = ?, port = ? WHERE id = ?", (attributs["ip"], attributs["port"], iport[0]))
                     curseur.connection.commit()
+                    curseur.execute("SELECT nom, ip, port, e, n FROM appareils_historique WHERE id = ?", (iport[0],))
+                    ligne = curseur.fetchone()
+                    print("la ligne vaut :", ligne)
+                    
+                    curseur.execute("DELETE FROM appareils WHERE n = ?", (ligne[4],))
+                    curseur.connection.commit() # Réinsérer l’appareil mis à jour
+                    curseur.execute( "INSERT INTO appareils (nom, ip, port, e, n) VALUES (?, ?, ?, ?, ?)", ligne )
+                    curseur.connection.commit()
+                    
+                    
+                    """
+                    try:
+                        curseur.execute("INSERT INTO appareils (nom, ip, port, e, n) VALUES (?, ?, ?, ?, ?)", ligne)
+                        curseur.connection.commit()
+                    except IntegrityError as e:
+                        print("Erreur INSERT appareils :", e) # par ex : remplacer plutôt que insérer
+                        curseur.execute("UPDATE appareils SET nom = ?, ip = ?, port = ?, e = ?, n = ? WHERE n = ?", (*ligne, ligne[4]))
+                        curseur.connection.commit()
+                     """   
+                        
+                        
                 else: # Nouvelle entrée
                     # Changement de nom
                     if "Client" in attributs["nom"]:
@@ -83,13 +119,22 @@ def gestion_clients(connexion, adresse):
                     else:
                         attributs["nom"] = "Routeur " + str(rt.rds.randint(0, 99999))
                     nom = attributs["nom"]
-                    insertion(curseur, attributs)
+                    
+                    curseur.execute( "INSERT INTO appareils_historique (nom, ip, port, n, e) VALUES (?, ?, ?, ?, ?)", (nom, attributs["ip"], attributs["port"], attributs["n"], attributs["e"]) )
+                    curseur.connection.commit()
+                    curseur.execute( "INSERT INTO appareils (nom, ip, port, n, e) VALUES (?, ?, ?, ?, ?)", (nom, attributs["ip"], attributs["port"], attributs["n"], attributs["e"]) )
+                    curseur.connection.commit()
+                    
+                    
+                    #insertion(curseur, attributs)
                     historique(curseur, f"Insertion de {adresse} et changement de nom en {attributs['nom']}.")
                 connexion.sendall(("NOUVEAU-NOM" + nom).encode("utf-8"))
+                print("DEBUG n =", attributs.get("n"))
+                print("DEBUG e =", attributs.get("e"))
                 break
                 
     except ConnectionResetError as cre:
-        historique(curseur, f"Erreur de connexion de {adresse} : {e}.")
+        historique(curseur, f"Erreur de connexion de {adresse} : {cre}.")
     
     finally:
         fermer(curseur, connexion_bdd)
@@ -137,7 +182,6 @@ def initialisation(curseur):
             port VARCHAR(5),
             n VARCHAR(2200) UNIQUE,
             e VARCHAR(2200) UNIQUE)""")
-        curseur.execute(f"ALTER TABLE appareils ADD UNIQUE (n)")
         curseur.execute(f"""CREATE TABLE IF NOT EXISTS appareils_historique (
             id INT PRIMARY KEY AUTO_INCREMENT,
             nom VARCHAR(20),
@@ -155,6 +199,8 @@ def initialisation(curseur):
 def insertion(curseur, attributs: dict):
     try:
         curseur.execute("INSERT INTO appareils (nom, ip, port, n, e) VALUES (?, ?, ?, ?, ?)", (attributs["nom"], attributs["ip"], attributs["port"], attributs["n"], attributs["e"]))
+        curseur.connection.commit()
+        curseur.execute("INSERT INTO appareils_historique (nom, ip, port, n, e) VALUES (?, ?, ?, ?, ?)", (attributs["nom"], attributs["ip"], attributs["port"], attributs["n"], attributs["e"]))
         curseur.connection.commit()
         print(f"Ajout de données à la base appareils")
     except mariadb.Error as e:
