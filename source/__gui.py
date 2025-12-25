@@ -44,6 +44,9 @@ class Progression(QDialog):
 
 
 class Client(QTabWidget):
+    
+    message_recu_signal = pyqtSignal(str)
+    
     def __init__(self, rsa, mon_nom: str, mon_ip: str, mon_port: int, ma_kp: dict, ma_km: dict, parent = None):
         super(Client, self).__init__(parent)
         
@@ -60,6 +63,7 @@ class Client(QTabWidget):
         self.cles_publiques = []
         self.mon_port = mon_port
         self.ip_maitre = QLineEdit(mon_ip)
+        self.message_recu_signal.connect(self.message_recu)
         
         self.creation_onglet1(mon_nom, mon_ip, mon_port, ma_kp, ma_km)
         self.creation_onglet2(rsa)
@@ -82,19 +86,22 @@ class Client(QTabWidget):
         """
         def initialiser():
             """Initialisation de l'appareil"""
-            ip_maitre = element_ip_maitre.text()
-            if element_port_maitre.text() == "":
+            ip_maitre = self.element_ip_maitre.text()
+            
+            if self.element_port_maitre.text() == "":
                 port_maitre = 57000
             else:
-                port_maitre = int(element_port_maitre.text())
+                port_maitre = int(self.element_port_maitre.text())
+            self.ip_maitre = ip_maitre
+            self.port_maitre = port_maitre
             parametres = [mon_nom, mon_ip, str(mon_port), str(ma_kp)]
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 client.connect((ip_maitre, port_maitre))
             except:
                 print("Connexion impossible")
-                element_ip_maitre.setStyleSheet("background-color: #E3492D")
-                element_port_maitre.setStyleSheet("background-color: #E3492D")
+                self.element_ip_maitre.setStyleSheet("background-color: #E3492D")
+                self.element_port_maitre.setStyleSheet("background-color: #E3492D")
                 return
             client.sendall('Demande initialisation'.encode("utf-8"))
             
@@ -117,30 +124,27 @@ class Client(QTabWidget):
                         element_nom.setText(self.mon_nom)
                     except:
                         self.mon_nom = self.mon_nom
-        
-        def fermer(self):
-            print("Fermeture de la fenêtre")
-            sys.exit()
-        
+                        
         def demander():
-            ip_maitre = element_ip_maitre.text()
-            if element_port_maitre.text() == "":
+            ip_maitre = self.element_ip_maitre.text()
+            if self.element_port_maitre.text() == "":
                 port_maitre = 57000
             else:
-                port_maitre = int(element_port_maitre.text())
+                port_maitre = int(self.element_port_maitre.text())
             print(f"Connexion au maître sur le port {port_maitre} de {ip_maitre}")
-            
+            self.ip_maitre = ip_maitre
+            self.port_maitre = port_maitre
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 client.connect((ip_maitre, port_maitre))
             except:
                 print("Connexion impossible")
-                element_ip_maitre.setStyleSheet("background-color: #E3492D")
-                element_port_maitre.setStyleSheet("background-color: #E3492D")
+                self.element_ip_maitre.setStyleSheet("background-color: #E3492D")
+                self.element_port_maitre.setStyleSheet("background-color: #E3492D")
                 return
             client.sendall('Liste routeurs'.encode("utf-8"))
-            element_ip_maitre.setStyleSheet("")
-            element_port_maitre.setStyleSheet("")
+            self.element_ip_maitre.setStyleSheet("")
+            self.element_port_maitre.setStyleSheet("")
             print('Demande de la liste des appareils en cours...')
             
             reponse = b''
@@ -232,16 +236,16 @@ class Client(QTabWidget):
         element_nom_maitre.setReadOnly(True)
         
         label_ip_maitre = QLabel("Adresse IP :")
-        element_ip_maitre = QLineEdit("")
+        self.element_ip_maitre = QLineEdit("")
         
         label_port_maitre = QLabel("Port :")
-        element_port_maitre = QLineEdit("")
+        self.element_port_maitre = QLineEdit("")
         validateur_maitre = QIntValidator(0, 999999)
-        element_port_maitre.setValidator(validateur_maitre)
+        self.element_port_maitre.setValidator(validateur_maitre)
         
         disposition_parametres2.addRow(label_nom_maitre, element_nom_maitre)
-        disposition_parametres2.addRow(label_ip_maitre, element_ip_maitre)
-        disposition_parametres2.addRow(label_port_maitre, element_port_maitre)
+        disposition_parametres2.addRow(label_ip_maitre, self.element_ip_maitre)
+        disposition_parametres2.addRow(label_port_maitre, self.element_port_maitre)
         
         disposition_boutons = QHBoxLayout()        
         bouton_enregistrer = QPushButton("Enregistrer les paramètres")
@@ -262,7 +266,7 @@ class Client(QTabWidget):
         
         bouton_enregistrer.clicked.connect(initialiser)
         bouton_demande.clicked.connect(demander)
-        bouton_fermer.clicked.connect(fermer)
+        bouton_fermer.clicked.connect(self.fermer)
         
         disposition.addWidget(titre1)
         disposition.addSpacing(10)
@@ -293,7 +297,7 @@ class Client(QTabWidget):
             Renvoie :
                 client (str) : Client choisi
             """
-            client = self.destinataire.currentText()
+            client = self.destinataire_liste.currentText()
             if client == "Client A":
                 print(f"Vous allez envoyer votre message à {client}")
             elif client == "Client B":
@@ -318,13 +322,13 @@ class Client(QTabWidget):
         def raz_texte():
             """Annule l'envoie d'un message"""
             texte.setText("")
-            self.destinataire.setCurrentIndex(0)
+            self.destinataire_liste.setCurrentIndex(0)
             curseur_nb_routeurs.setValue(0)
 
         def envoyer():
             """Envoie d'un message"""
             self.destinataire = choix_client()
-            if self.destinataire == "Choisissez un client":
+            if self.destinataire == "Choisissez un destinataire":
                 raz_texte()
                 return
             message = texte.toPlainText()
@@ -336,7 +340,14 @@ class Client(QTabWidget):
             if self.etat == 0:
                 print("Mode auto")
             
-                routeurs = ["Routeur 1", "Routeur 2"]
+                routeurs = []
+                for i in range(self.tableau_routeurs.rowCount()):
+                    nom = self.tableau_routeurs.item(i, 0).text()
+                    routeurs.append(nom)
+                
+                
+                
+                
                 routeurs_aleatoire = []
             
                 for i in range(0, self.nb_routeurs):
@@ -356,11 +367,27 @@ class Client(QTabWidget):
             dialog_progression.pourcentage = 50
             
             chiffre, destinataire = rsa.torage(message, passage, self.cles_publiques)
-            dest = destinataire['nom']
-            print(dest, chiffre)
+            
+            print("Destinataire", destinataire)
+            
+            #dest = destinataire['nom']
+            print(chiffre)
+            
+            """
+            for d in self.cles_publiques:
+                if d["nom"] == destinataire:
+                    adresse_destinataire = d["id"]
+                    port_receveur = d["port"]
+                    break
+            """
+            
             
             adresse_destinataire = destinataire['ip']
-            port_receveur = destinataire['port']
+            port_receveur = int(destinataire['port'])
+            
+            print("Type", type(port_receveur), type(adresse_destinataire))
+            print("Destinataire", adresse_destinataire, port_receveur)
+            
             
             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client.connect((adresse_destinataire, port_receveur))
@@ -372,7 +399,7 @@ class Client(QTabWidget):
             
             print(f"Message envoyé à {destinataire}")
             dialog_progression.pourcentage = 100
-            dialog_progression.close()
+            #dialog_progression.close()
             raz_texte()
             return
         
@@ -389,11 +416,11 @@ class Client(QTabWidget):
         self.etat = 0
         
         label_destinataire = QLabel("Envoyer le message à :")
-        self.destinataire = QComboBox()
-        self.destinataire.addItem("Choisissez un client")
-        self.destinataire.currentTextChanged.connect(choix_client)
+        self.destinataire_liste = QComboBox()
+        self.destinataire_liste.addItem("Choisissez un destinataire")
+        self.destinataire_liste.currentTextChanged.connect(choix_client)
         disposition_destinataire = QFormLayout()
-        disposition_destinataire.addRow(label_destinataire, self.destinataire)
+        disposition_destinataire.addRow(label_destinataire, self.destinataire_liste)
         
         texte = QTextEdit()
         texte.setPlaceholderText("Saisissez votre message ici…")
@@ -496,8 +523,7 @@ class Client(QTabWidget):
         """Ajoute un message dans le tableau"""
         ligne = self.tableau_messages.rowCount()
         self.tableau_messages.insertRow(ligne)
-        item = QTableWidgetItem(message)
-        self.tableau_messages.setItem(ligne, 0, item)
+        self.tableau_messages.setItem(ligne, 0, QTableWidgetItem(message))
     
     def ajouter_routeur_tableau(self, routeur: dict):
         """
@@ -525,7 +551,7 @@ class Client(QTabWidget):
         self.liste_passages.addItem(routeur['nom'])
         
         if routeur['nom'].startswith("Client"):
-            self.destinataire.addItem(routeur['nom'])
+            self.destinataire_liste.addItem(routeur['nom'])
 
     def liste_routeurs(self, routeurs: list):
         """Ajoute les routeurs dans le tableau"""
@@ -545,27 +571,23 @@ class Client(QTabWidget):
         permutations = self.generer_permutations(clients)
         for p in permutations:
             self.liste_passages.addItem(p)
-        """    
-        # vider les combos
-        self.destinataire.clear()
+        """   
+        self.destinataire_liste.clear()
         self.liste_passages.clear()
 
-        self.destinataire.addItem("Choisissez un destinataire")
+        self.destinataire_liste.addItem("Choisissez un destinataire")
         self.liste_passages.addItem("Choisissez un passage")
 
-        # --- Clients uniquement pour destinataire ---
         clients = [r['nom'] for r in self.cles_publiques if r['nom'].startswith("Client")]
 
         for nom in clients:
-            self.destinataire.addItem(nom)
+            self.destinataire_liste.addItem(nom)
 
-        # --- Tous les appareils pour liste_passages ---
         appareils = [r['nom'] for r in self.cles_publiques]
-
-        # Ajouter les appareils bruts
+        """
         for nom in appareils:
             self.liste_passages.addItem(nom)
-
+        """
         # Générer permutations
         permutations = self.generer_permutations(appareils)
 
@@ -583,7 +605,27 @@ class Client(QTabWidget):
             reste = elements[:i] + elements[i+1:]
             self.generer_permutations(reste, chemin + [element], resultat)
         return resultat
-
+    
+    def closeEvent(self, event):
+        print("Fermeture de l'application")
+        self.maj_etat()
+        #QTimer.singleShot(300, QApplication.quit)
+        event.accept()
+    
+    def fermer(self):
+        self.close()
+    
+    def maj_etat(self):
+        try:
+            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client.connect((self.ip_maitre, self.port_maitre))
+            client.sendall("QUITJEPARS".encode("utf-8"))
+            client.sendall((self.mon_nom + "JEPARS").encode("utf-8"))
+            client.sendall("FIN-TRANSJEPARS".encode("utf-8"))
+            client.close()
+        except:
+            pass
+    
 
 class Maitre(QTabWidget):
     def __init__(self, mon_ip: str, mon_port: int, liste_appareils: dict, ma_cle_publique, ma_cle_privee, parent = None):

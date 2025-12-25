@@ -662,7 +662,11 @@ class RSA:
             bloc_int = pow(int(bloc_chiffre, 16), d0, n0)
             nb_octets = (bloc_int.bit_length() + 7) // 8
             message_bytes += bloc_int.to_bytes(nb_octets, byteorder='big')
-        message = message_bytes.decode("utf-8")
+        try:
+            message = message_bytes.decode("utf-8")
+        except UnicodeDecodeError as e:
+            print("Problème de décodage", e)
+            return message_bytes
         return message
     
     def hacher2(self, message: str = None, sel: bytes = None) -> dict:
@@ -794,6 +798,9 @@ class RSA:
                     break
         if len(cles_publiques_reordonnees) == 0:
             raise ValueError("Les noms ne correspondent pas aux valeurs des clés.")
+        # Sinon
+        while len(cles_publiques_reordonnees) < len(passage_norm):
+            cles_publiques_reordonnees.append(cles_publiques_reordonnees[0])
         # Premier chiffrage pour destinataire final
         destinataire = cles_publiques_reordonnees[0]
         chiffre = self.chiffrer(message, cles_publiques_reordonnees[-1])
@@ -817,18 +824,47 @@ class RSA:
         """
         # Déchiffrage
         dechiffre = self.dechiffrer(message_chiffre)
+        print("DECHIFFRE : ", repr(dechiffre))
+        
+        if "[" not in dechiffre:
+            message = dechiffre.strip().strip("'").strip('"')
+            return "Aucun", message
+        # Identification du destinataire
+        i = dechiffre.find('[')
+        destinataire = dechiffre[:i].strip().strip("'").strip('"')
+        
+        u = dechiffre[i:]
+        if u.startswith("[") and u.endswith("]"):
+            u = u[1:-1]
+        
+        message_a_envoyer = [x.strip().strip("'") for x in u.split(",")]
+        
+        if message_a_envoyer == ['']:
+            message_a_envoyer = destinataire
+            destinataire = "Aucun"
+        
+        return destinataire, message_a_envoyer
+        
+        
+        """
         # Identification du destinataire
         i = dechiffre.find('[')
         destinataire = dechiffre[:i]
         # Calcul du message à envoyer
         u = dechiffre[i:]
-        message_a_envoyer = [x.strip().strip("'") for x in u[1:-1].split(",")]
+        print("dechiffre :", repr(dechiffre))
+        print(u, repr(u))
+        # Si capitaine
+        #if u.startswith("[") and u.endswith("]"):
+        #u = u[1:]
+        print("U rea is :", u)
+        message_a_envoyer = [x.strip().strip("'") for x in u.split(",")]
         # Pour le dernier destinataire
         if message_a_envoyer == ['']:
             message_a_envoyer = destinataire
             destinataire = "Aucun"
         return destinataire, message_a_envoyer
-
+        """
     def sauvegarde_cles(self, nom_fichier: str, alfa: int, cle: int) -> None:
         """
         Sauvergarde les clés RSA dans un fichier .pem
