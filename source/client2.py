@@ -26,14 +26,12 @@ def gestion_clients(connexion, adresse, rsa, fenetre_client):
                     bloc.append(ligne)
                     continue
                 
-                #elif ligne == "FIN-TRANS":
                 else:    
                     print(f"Message de {adresse}")
                     print(bloc)
                     
                     dechiffre = rsa.detorage(bloc)
                     print(dechiffre)
-                    
                     
                     message = dechiffre[1]
                     print("Lor message is :", message)
@@ -44,24 +42,15 @@ def gestion_clients(connexion, adresse, rsa, fenetre_client):
                     elif isinstance(message, list):
                         with open((rt.os.path.splitext(rt.os.path.basename(__file__))[0] + "messages_chiffres_recus.txt"), "a", encoding = "utf-8") as h:
                             h.write(str(message) + "\n")
-                            # ICI, JE VEUX ENVOYER LE MESSAGE A UN CLIENT, QUI PEUT ETRE MOI !!
                         destinataire = dechiffre[0]
                         print("Envoie du message  chiffré à :", destinataire)
                             
-                        
                         for i in range(fenetre_client.tableau_routeurs.rowCount()):
                             if fenetre_client.tableau_routeurs.item(i, 0).text() == destinataire:
                                 ip_dest = fenetre_client.tableau_routeurs.item(i, 1).text()
                                 port_dest = int(fenetre_client.tableau_routeurs.item(i, 2).text())
                                 print(ip_dest, port_dest)
-                        
-                        """
-                        if destinataire in fenetre_client.tableau_routeurs:
-                            print("Lra ligne :", fenetre_client.tableau_routeurs)
-                                
-                            ip_dest = fenetre_client.tableau_routeurs[destinataire]["ip"]
-                            port_dest = fenetre_client.tableau_routeurs[destinataire]["port"]
-                        """        
+
                         try:
                             client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                             client.connect((ip_dest, port_dest))
@@ -72,19 +61,9 @@ def gestion_clients(connexion, adresse, rsa, fenetre_client):
                             client.close()
                         except Exception as e:
                             print("Erreur d'envoie : ", e)
-                            
-                        #else:
-                           # print("Envoie impossible !")
-                            
                     else:
                         print("Indéterminé")
-                            
-                            
-                    #except:
-                    #    print("Affichage impossible")
                     bloc.clear()
-                #else:
-                #    bloc.append(ligne)
     finally:
         connexion.close()
 
@@ -112,8 +91,7 @@ def main():
     ma_kp = ma_cle_publique
     ma_km = ma_cle_privee
     
-    mon_port = 62030
-    
+    mon_port = rt.rds.randint(50000, 65500)
     
     # Fenêtre client
     fenetre_client = gui.Client(rsa, "Client x", rt.ip(), mon_port, ma_kp, ma_km)
@@ -136,37 +114,6 @@ def main():
 
     # On démarre juste le thread (pas le worker)
     thread.start()
-
-    
-    
-    """
-    # Fenêtre client
-    fenetre_client = gui.Client(rsa, "Client G", rt.ip(), 48630, ma_kp, ma_km)
-    fenetre_client.showMaximized()
-
-    # Thread client
-    worker = gui.ClientWorker("Client G", rt.ip(), 48630, ma_kp, ma_km, [])
-    thread = gui.QThread()
-    worker.moveToThread(thread)
-
-    # Réception des messages
-    worker.message_recu.connect(fenetre_client.message_recu)
-    worker.liste_routeurs.connect(fenetre_client.ajouter_routeur_tableau)
-
-    # Fermeture du thread
-    worker.message_recu.connect(thread.quit)
-    worker.message_recu.connect(worker.deleteLater)
-    thread.finished.connect(thread.deleteLater)
-
-    # Début du thread
-    thread.started.connect(worker.run)
-    thread.start()
-    """
-    """
-    # Lancer le serveur dans un thread séparé
-    serveur_thread = gui.ServeurThread(fenetre_client.mon_port)  # Utilisation du port
-    serveur_thread.start()
-    """
 
     # Fermeture application
     sys.exit(app.exec())
