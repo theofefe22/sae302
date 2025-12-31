@@ -1,6 +1,7 @@
 # BIBLIOTHEQUES
 import rotator as rt
 import __gui as gui
+import __logo
 import mariadb
 from mariadb import IntegrityError
 import socket

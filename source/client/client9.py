@@ -1,4 +1,5 @@
-import gui8 as gui
+import __gui as gui
+import __logo
 import rotator as rt
 import sys
 import socket
